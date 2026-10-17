@@ -1,4 +1,4 @@
-package com.github.aratnitsyn.tictactoe.auth.security
+package com.github.aratnitsyn.tictactoe.auth.account.security
 
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertFalse

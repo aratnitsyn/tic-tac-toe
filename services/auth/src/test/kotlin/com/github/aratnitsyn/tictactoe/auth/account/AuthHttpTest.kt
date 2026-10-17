@@ -4,10 +4,10 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.read.ListAppender
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.github.aratnitsyn.tictactoe.auth.http.AuthController
-import com.github.aratnitsyn.tictactoe.auth.http.AuthErrors
-import com.github.aratnitsyn.tictactoe.auth.http.ServiceAuthorization
-import com.github.aratnitsyn.tictactoe.auth.security.LoginResponseCipher
+import com.github.aratnitsyn.tictactoe.auth.account.http.AuthController
+import com.github.aratnitsyn.tictactoe.auth.account.security.LoginResponseCipher
+import com.github.aratnitsyn.tictactoe.auth.security.AuthErrors
+import com.github.aratnitsyn.tictactoe.auth.security.ServiceAuthorization
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable

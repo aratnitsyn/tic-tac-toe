@@ -1,7 +1,9 @@
-package com.github.aratnitsyn.tictactoe.auth.http
+package com.github.aratnitsyn.tictactoe.auth.security
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.aratnitsyn.tictactoe.auth.account.tokenHash
+import com.github.aratnitsyn.tictactoe.auth.util.blocking
+import com.github.aratnitsyn.tictactoe.auth.util.errorResponse
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.core.io.buffer.DataBufferUtils

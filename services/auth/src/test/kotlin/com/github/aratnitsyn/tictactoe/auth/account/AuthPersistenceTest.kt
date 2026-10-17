@@ -1,7 +1,7 @@
 package com.github.aratnitsyn.tictactoe.auth.account
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.github.aratnitsyn.tictactoe.auth.security.LoginResponseCipher
+import com.github.aratnitsyn.tictactoe.auth.account.security.LoginResponseCipher
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals

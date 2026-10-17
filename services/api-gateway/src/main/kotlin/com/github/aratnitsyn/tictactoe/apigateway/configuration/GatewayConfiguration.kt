@@ -1,6 +1,8 @@
-package com.github.aratnitsyn.tictactoe.apigateway
+package com.github.aratnitsyn.tictactoe.apigateway.configuration
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.github.aratnitsyn.tictactoe.apigateway.security.GatewayErrors
+import com.github.aratnitsyn.tictactoe.apigateway.util.nativeRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.gateway.route.RouteLocator
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder
@@ -187,17 +189,6 @@ class GatewayConfiguration(
                             }
                     }.uri(authUrl)
             }.build()
-}
-
-fun nativeRequest(exchange: org.springframework.web.server.ServerWebExchange): Boolean {
-    val noOrigin = exchange.request.headers.origin == null
-    val noCookie = exchange.request.cookies.getFirst("SESSION") == null
-    val credential =
-        exchange.request.headers
-            .getFirst("Authorization")
-            ?.startsWith("Bearer ") == true
-    val declared = exchange.request.headers.getFirst("X-Client-Type") == "NATIVE"
-    return noOrigin && noCookie && (credential || declared)
 }
 
 private const val INTROSPECTION_TIMEOUT_SECONDS = 3L

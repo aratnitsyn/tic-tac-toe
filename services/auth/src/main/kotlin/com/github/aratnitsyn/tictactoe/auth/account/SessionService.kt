@@ -1,7 +1,7 @@
 package com.github.aratnitsyn.tictactoe.auth.account
 
-import com.github.aratnitsyn.tictactoe.auth.security.EncryptedLoginResponse
-import com.github.aratnitsyn.tictactoe.auth.security.LoginResponseCipher
+import com.github.aratnitsyn.tictactoe.auth.account.security.EncryptedLoginResponse
+import com.github.aratnitsyn.tictactoe.auth.account.security.LoginResponseCipher
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.sql.Connection

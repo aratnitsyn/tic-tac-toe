@@ -1,7 +1,8 @@
-package com.github.aratnitsyn.tictactoe.auth.http
+package com.github.aratnitsyn.tictactoe.auth.security
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.aratnitsyn.tictactoe.auth.account.AuthFailure
+import com.github.aratnitsyn.tictactoe.auth.util.errorResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType

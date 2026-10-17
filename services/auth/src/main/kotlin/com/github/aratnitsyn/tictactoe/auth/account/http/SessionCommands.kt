@@ -1,9 +1,11 @@
-package com.github.aratnitsyn.tictactoe.auth.http
+package com.github.aratnitsyn.tictactoe.auth.account.http
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.aratnitsyn.tictactoe.auth.account.LogoutService
 import com.github.aratnitsyn.tictactoe.auth.account.WsTickets
+import com.github.aratnitsyn.tictactoe.auth.util.blocking
+import com.github.aratnitsyn.tictactoe.auth.util.token
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping

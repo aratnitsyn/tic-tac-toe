@@ -1,5 +1,6 @@
-package com.github.aratnitsyn.tictactoe.apigateway
+package com.github.aratnitsyn.tictactoe.apigateway.security
 
+import com.github.aratnitsyn.tictactoe.apigateway.util.nativeRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order

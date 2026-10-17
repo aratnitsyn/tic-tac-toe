@@ -1,4 +1,4 @@
-package com.github.aratnitsyn.tictactoe.apigateway
+package com.github.aratnitsyn.tictactoe.apigateway.security
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpStatus

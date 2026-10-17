@@ -1,10 +1,10 @@
 package com.github.aratnitsyn.tictactoe.auth.account
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.github.aratnitsyn.tictactoe.auth.http.AuthController
-import com.github.aratnitsyn.tictactoe.auth.http.AuthErrors
-import com.github.aratnitsyn.tictactoe.auth.http.AuthRateLimit
-import com.github.aratnitsyn.tictactoe.auth.security.LoginResponseCipher
+import com.github.aratnitsyn.tictactoe.auth.account.http.AuthController
+import com.github.aratnitsyn.tictactoe.auth.account.security.LoginResponseCipher
+import com.github.aratnitsyn.tictactoe.auth.security.AuthErrors
+import com.github.aratnitsyn.tictactoe.auth.security.AuthRateLimit
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable

@@ -1,10 +1,10 @@
-package com.github.aratnitsyn.tictactoe.auth.http
+package com.github.aratnitsyn.tictactoe.auth.configuration
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.aratnitsyn.tictactoe.auth.account.PasswordHasher
 import com.github.aratnitsyn.tictactoe.auth.account.RegistrationService
 import com.github.aratnitsyn.tictactoe.auth.account.SessionService
-import com.github.aratnitsyn.tictactoe.auth.security.LoginResponseCipher
+import com.github.aratnitsyn.tictactoe.auth.account.security.LoginResponseCipher
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

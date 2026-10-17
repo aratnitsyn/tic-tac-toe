@@ -1,9 +1,10 @@
-package com.github.aratnitsyn.tictactoe.user.profile
+package com.github.aratnitsyn.tictactoe.user.configuration
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.aratnitsyn.tictactoe.user.persistence.Inbox
 import com.github.aratnitsyn.tictactoe.user.persistence.InboxDelivery
 import com.github.aratnitsyn.tictactoe.user.persistence.registerInboxConsumer
+import com.github.aratnitsyn.tictactoe.user.profile.AccountRegisteredHandler
 import io.nats.client.Connection
 import io.nats.client.JetStreamSubscription
 import io.nats.client.Nats
@@ -13,9 +14,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.EnableScheduling
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
-import java.time.Duration
 import javax.sql.DataSource
 
 @Configuration
@@ -62,17 +60,3 @@ class ProfileRuntime {
             AccountRegisteredHandler(mapper)::apply,
         )
 }
-
-@Component
-class ProfileWorker(
-    private val subscription: JetStreamSubscription,
-    private val delivery: InboxDelivery,
-) {
-    @Scheduled(fixedDelayString = "\${events.poll-ms:100}")
-    fun poll() {
-        subscription.fetch(INBOX_BATCH_SIZE, Duration.ofMillis(INBOX_POLL_MILLIS)).forEach(delivery::handle)
-    }
-}
-
-private const val INBOX_BATCH_SIZE = 16
-private const val INBOX_POLL_MILLIS = 250L
