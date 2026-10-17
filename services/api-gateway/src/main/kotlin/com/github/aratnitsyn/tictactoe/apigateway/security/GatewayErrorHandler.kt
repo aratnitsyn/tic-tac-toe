@@ -10,7 +10,7 @@ import java.time.Instant
 import java.util.UUID
 
 @Component
-class GatewayErrors(
+class GatewayErrorHandler(
     private val mapper: ObjectMapper,
 ) {
     fun write(

@@ -6,7 +6,7 @@ import ch.qos.logback.core.read.ListAppender
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.aratnitsyn.tictactoe.auth.account.http.AuthController
 import com.github.aratnitsyn.tictactoe.auth.account.security.LoginResponseCipher
-import com.github.aratnitsyn.tictactoe.auth.security.AuthErrors
+import com.github.aratnitsyn.tictactoe.auth.security.AuthErrorHandler
 import com.github.aratnitsyn.tictactoe.auth.security.ServiceAuthorization
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
@@ -40,7 +40,7 @@ class AuthHttpTest {
     private val client =
         WebTestClient
             .bindToController(controller)
-            .controllerAdvice(AuthErrors(mapper))
+            .controllerAdvice(AuthErrorHandler(mapper))
             .webFilter<WebTestClient.ControllerSpec>(ServiceAuthorization(serviceToken))
             .configureClient()
             .responseTimeout(Duration.ofSeconds(10))
@@ -59,7 +59,7 @@ class AuthHttpTest {
                 .uri("/api/v1/auth/register")
                 .header("X-Service-Token", serviceToken)
                 .header("Idempotency-Key", UUID.randomUUID().toString())
-                .bodyValue(Credentials(email, password, ClientType.NATIVE))
+                .bodyValue(Credential(email, password, ClientType.NATIVE))
                 .exchange()
                 .expectStatus()
                 .isCreated
@@ -77,7 +77,7 @@ class AuthHttpTest {
                 .uri("/api/v1/auth/login")
                 .header("X-Service-Token", serviceToken)
                 .header("Idempotency-Key", UUID.randomUUID().toString())
-                .bodyValue(Credentials(email, password, ClientType.NATIVE))
+                .bodyValue(Credential(email, password, ClientType.NATIVE))
                 .exchange()
                 .expectStatus()
                 .isOk
@@ -95,7 +95,7 @@ class AuthHttpTest {
 
     @Test
     fun `web login issues secure HttpOnly cookie and excludes token from JSON`() {
-        val credentials = Credentials("${UUID.randomUUID()}@example.com", "Abc1!x", ClientType.WEB)
+        val credentials = Credential("${UUID.randomUUID()}@example.com", "Abc1!x", ClientType.WEB)
         RegistrationService(source, hasher, mapper).register(UUID.randomUUID(), credentials)
         client
             .post()

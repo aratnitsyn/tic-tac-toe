@@ -13,7 +13,7 @@ class AuthFailure(
 enum class ClientType { WEB, NATIVE }
 
 // No generated toString: requests contain a secret and must not be logged.
-class Credentials(
+class Credential(
     val email: String,
     val password: String,
     val clientType: ClientType,

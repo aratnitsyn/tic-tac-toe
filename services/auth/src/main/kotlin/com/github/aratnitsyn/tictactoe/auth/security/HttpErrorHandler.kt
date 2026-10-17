@@ -3,7 +3,7 @@ package com.github.aratnitsyn.tictactoe.auth.security
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.aratnitsyn.tictactoe.auth.account.AuthFailure
-import com.github.aratnitsyn.tictactoe.auth.util.errorResponse
+import com.github.aratnitsyn.tictactoe.auth.util.HttpResponseUtil.errorResponse
 import org.springframework.core.annotation.Order
 import org.springframework.core.io.buffer.DataBufferLimitException
 import org.springframework.http.HttpStatus
@@ -15,7 +15,7 @@ import reactor.core.publisher.Mono
 
 @Component
 @Order(ERROR_HANDLER_ORDER)
-class HttpErrors(
+class HttpErrorHandler(
     private val mapper: ObjectMapper,
 ) : WebExceptionHandler {
     override fun handle(

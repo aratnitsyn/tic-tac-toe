@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.aratnitsyn.tictactoe.auth.account.AuthFailure
 import com.github.aratnitsyn.tictactoe.auth.account.ClientType
-import com.github.aratnitsyn.tictactoe.auth.account.Credentials
+import com.github.aratnitsyn.tictactoe.auth.account.Credential
 import com.github.aratnitsyn.tictactoe.auth.account.RegistrationService
 import com.github.aratnitsyn.tictactoe.auth.account.SessionIdentity
 import com.github.aratnitsyn.tictactoe.auth.account.SessionService
-import com.github.aratnitsyn.tictactoe.auth.util.blocking
-import com.github.aratnitsyn.tictactoe.auth.util.token
+import com.github.aratnitsyn.tictactoe.auth.util.WebFluxUtil.blocking
+import com.github.aratnitsyn.tictactoe.auth.util.WebFluxUtil.token
 import org.springframework.http.ResponseCookie
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -32,7 +32,7 @@ class AuthController(
     @PostMapping("/api/v1/auth/register")
     fun register(
         @RequestHeader("Idempotency-Key") commandId: UUID,
-        @RequestBody request: Credentials,
+        @RequestBody request: Credential,
     ): Mono<ResponseEntity<JsonNode>> =
         blocking {
             ResponseEntity.status(201).body(registration.register(commandId, request))
@@ -41,7 +41,7 @@ class AuthController(
     @PostMapping("/api/v1/auth/login")
     fun login(
         @RequestHeader("Idempotency-Key") commandId: UUID,
-        @RequestBody request: Credentials,
+        @RequestBody request: Credential,
         exchange: ServerWebExchange,
     ): Mono<ResponseEntity<JsonNode>> =
         blocking {

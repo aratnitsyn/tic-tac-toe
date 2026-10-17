@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.github.aratnitsyn.tictactoe.auth.account.LogoutService
 import com.github.aratnitsyn.tictactoe.auth.account.ParticipationLogout
 import com.github.aratnitsyn.tictactoe.auth.account.SessionService
-import com.github.aratnitsyn.tictactoe.auth.account.WsTickets
+import com.github.aratnitsyn.tictactoe.auth.account.WsTicketService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -21,7 +21,7 @@ class AuthRuntimeConfiguration {
     fun wsTickets(
         redis: StringRedisTemplate,
         sessions: SessionService,
-    ) = WsTickets(redis, sessions)
+    ) = WsTicketService(redis, sessions)
 
     @Bean
     fun logoutService(

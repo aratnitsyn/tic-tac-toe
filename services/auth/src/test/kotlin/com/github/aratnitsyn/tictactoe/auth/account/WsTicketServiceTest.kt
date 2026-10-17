@@ -19,7 +19,7 @@ import java.util.concurrent.Executors
 import javax.crypto.KeyGenerator
 
 @EnabledIfEnvironmentVariable(named = "REDIS_PASSWORD", matches = ".+")
-class WsTicketsTest {
+class WsTicketServiceTest {
     private val database =
         com.github.aratnitsyn.tictactoe.auth.persistence
             .AuthTestDatabase()
@@ -42,11 +42,11 @@ class WsTicketsTest {
         val executor = Executors.newFixedThreadPool(4)
         try {
             val redis = StringRedisTemplate(factory)
-            val credentials = Credentials("${UUID.randomUUID()}@example.com", "Abc1!x", ClientType.NATIVE)
+            val credentials = Credential("${UUID.randomUUID()}@example.com", "Abc1!x", ClientType.NATIVE)
             RegistrationService(source, hasher, jacksonObjectMapper()).register(UUID.randomUUID(), credentials)
             val session = sessions.login(UUID.randomUUID(), credentials)
             val now = Instant.now()
-            val tickets = WsTickets(redis, sessions, Clock.fixed(now, ZoneOffset.UTC))
+            val tickets = WsTicketService(redis, sessions, Clock.fixed(now, ZoneOffset.UTC))
             val commandId = UUID.randomUUID()
             val issued = tickets.issue(session.token, commandId)
             val replay = tickets.issue(session.token, commandId)
@@ -55,7 +55,7 @@ class WsTicketsTest {
             val results = (1..4).map { executor.submit(Callable { tickets.consume(issued.ticket) }) }.map { it.get() }
             assertEquals(1, results.count { it != null })
             val expiring = tickets.issue(session.token)
-            val atDeadline = WsTickets(redis, sessions, Clock.fixed(expiring.expiresAt, ZoneOffset.UTC))
+            val atDeadline = WsTicketService(redis, sessions, Clock.fixed(expiring.expiresAt, ZoneOffset.UTC))
             assertNull(atDeadline.consume(expiring.ticket))
             assertNull(tickets.consume(expiring.ticket))
             val closingTicket = tickets.issue(session.token)

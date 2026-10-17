@@ -36,7 +36,7 @@ class SessionService(
     @Suppress("MagicNumber") // JDBC positions and HTTP status constants.
     fun login(
         commandId: UUID,
-        credentials: Credentials,
+        credentials: Credential,
     ): LoginResult {
         val email = CredentialPolicy.email(credentials.email)
         val account = findAccount(email.key)

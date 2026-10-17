@@ -29,7 +29,7 @@ class LogoutTest {
 
     @Test
     fun `closing denies access and login until participation confirms ordinary menu logout`() {
-        val credentials = Credentials("${UUID.randomUUID()}@example.com", "Abc1!x", ClientType.NATIVE)
+        val credentials = Credential("${UUID.randomUUID()}@example.com", "Abc1!x", ClientType.NATIVE)
         RegistrationService(source, hasher, jacksonObjectMapper()).register(UUID.randomUUID(), credentials)
         val loginCommand = UUID.randomUUID()
         val session = sessions.login(loginCommand, credentials)

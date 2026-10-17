@@ -54,6 +54,6 @@ class CredentialPolicyTest {
         assertFalse(first.contains("Abc1!x"))
         assertTrue(hasher.matches("Abc1!x", first))
         assertFalse(hasher.matches("Abc2!x", first))
-        assertFalse(Credentials("a@example.com", "Abc1!x", ClientType.NATIVE).toString().contains("Abc1!x"))
+        assertFalse(Credential("a@example.com", "Abc1!x", ClientType.NATIVE).toString().contains("Abc1!x"))
     }
 }

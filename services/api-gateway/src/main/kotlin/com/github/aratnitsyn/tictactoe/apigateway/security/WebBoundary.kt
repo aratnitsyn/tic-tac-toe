@@ -1,6 +1,6 @@
 package com.github.aratnitsyn.tictactoe.apigateway.security
 
-import com.github.aratnitsyn.tictactoe.apigateway.util.nativeRequest
+import com.github.aratnitsyn.tictactoe.apigateway.util.RequestUtil.nativeRequest
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
@@ -20,7 +20,7 @@ import java.time.Instant
 @Order(Ordered.HIGHEST_PRECEDENCE)
 class WebBoundary(
     @Value("\${gateway.web-origin}") private val origin: String,
-    private val errors: GatewayErrors,
+    private val errors: GatewayErrorHandler,
 ) : WebFilter {
     override fun filter(
         exchange: ServerWebExchange,

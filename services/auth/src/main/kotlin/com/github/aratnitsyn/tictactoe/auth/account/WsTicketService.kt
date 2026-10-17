@@ -12,7 +12,7 @@ class IssuedTicket(
     val expiresAt: Instant,
 )
 
-class WsTickets(
+class WsTicketService(
     private val redis: StringRedisTemplate,
     private val sessions: SessionService,
     private val clock: Clock = Clock.systemUTC(),

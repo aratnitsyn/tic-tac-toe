@@ -12,7 +12,7 @@ import java.util.UUID
 import javax.sql.DataSource
 
 @Configuration
-class AuthEvents {
+class AuthEventConfiguration {
     @Bean(destroyMethod = "close")
     fun nats(
         @Value("\${events.url}") url: String,

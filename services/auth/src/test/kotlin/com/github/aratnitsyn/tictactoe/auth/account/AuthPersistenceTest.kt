@@ -37,7 +37,7 @@ class AuthPersistenceTest {
     private var now = Instant.parse("2026-10-17T12:00:00Z")
     private val sessions = SessionService(source, hasher, cipher) { now }
 
-    private fun credentials() = Credentials("${UUID.randomUUID()}@example.com", "Abc1!x", ClientType.NATIVE)
+    private fun credentials() = Credential("${UUID.randomUUID()}@example.com", "Abc1!x", ClientType.NATIVE)
 
     @Test
     fun `registration retry returns same identity and one secret-free outbox event`() {
@@ -60,7 +60,7 @@ class AuthPersistenceTest {
             }
         }
         assertThrows(AuthFailure::class.java) { registration.register(UUID.randomUUID(), credentials) }
-        val changed = Credentials(credentials.email, "Abc2!x", ClientType.NATIVE)
+        val changed = Credential(credentials.email, "Abc2!x", ClientType.NATIVE)
         val conflict = assertThrows(AuthFailure::class.java) { registration.register(command, changed) }
         assertEquals("IDEMPOTENCY_CONFLICT", conflict.code)
     }

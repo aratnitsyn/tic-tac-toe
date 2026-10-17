@@ -3,7 +3,7 @@ package com.github.aratnitsyn.tictactoe.auth.account
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.aratnitsyn.tictactoe.auth.account.http.AuthController
 import com.github.aratnitsyn.tictactoe.auth.account.security.LoginResponseCipher
-import com.github.aratnitsyn.tictactoe.auth.security.AuthErrors
+import com.github.aratnitsyn.tictactoe.auth.security.AuthErrorHandler
 import com.github.aratnitsyn.tictactoe.auth.security.AuthRateLimit
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -45,7 +45,7 @@ class AuthRateLimitTest {
             val client =
                 WebTestClient
                     .bindToController(controller)
-                    .controllerAdvice(AuthErrors(mapper))
+                    .controllerAdvice(AuthErrorHandler(mapper))
                     .webFilter<WebTestClient.ControllerSpec>(AuthRateLimit(StringRedisTemplate(factory), mapper))
                     .build()
             val email = "${UUID.randomUUID()}@example.com"
@@ -55,7 +55,7 @@ class AuthRateLimitTest {
                     .uri("/api/v1/auth/login")
                     .header("Idempotency-Key", UUID.randomUUID().toString())
                     .header("X-Client-IP", UUID.randomUUID().toString())
-                    .bodyValue(Credentials(email, "Abc1!x", ClientType.NATIVE))
+                    .bodyValue(Credential(email, "Abc1!x", ClientType.NATIVE))
                     .exchange()
                     .expectStatus()
                     .isUnauthorized
@@ -65,7 +65,7 @@ class AuthRateLimitTest {
                 .uri("/api/v1/auth/login")
                 .header("Idempotency-Key", UUID.randomUUID().toString())
                 .header("X-Client-IP", UUID.randomUUID().toString())
-                .bodyValue(Credentials(email, "Abc1!x", ClientType.NATIVE))
+                .bodyValue(Credential(email, "Abc1!x", ClientType.NATIVE))
                 .exchange()
                 .expectStatus()
                 .isEqualTo(429)

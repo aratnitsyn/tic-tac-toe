@@ -16,7 +16,7 @@ class RegistrationService(
     @Suppress("TooGenericExceptionCaught") // Rollback must cover every transaction failure.
     fun register(
         commandId: UUID,
-        credentials: Credentials,
+        credentials: Credential,
     ): JsonNode {
         val email = CredentialPolicy.email(credentials.email)
         CredentialPolicy.password(credentials.password)
@@ -46,7 +46,7 @@ class RegistrationService(
         connection: Connection,
         email: EmailAddress,
         commandId: UUID,
-        credentials: Credentials,
+        credentials: Credential,
     ): JsonNode? =
         connection
             .prepareStatement(

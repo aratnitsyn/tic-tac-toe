@@ -18,7 +18,7 @@ import javax.sql.DataSource
 
 @Configuration
 @EnableScheduling
-class ProfileRuntime {
+class ProfileRuntimeConfiguration {
     @Bean(destroyMethod = "close")
     fun nats(
         @Value("\${events.url}") url: String,
