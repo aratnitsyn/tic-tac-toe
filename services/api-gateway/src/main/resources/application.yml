@@ -13,3 +13,7 @@ management:
     health:
       probes:
         enabled: true
+gateway:
+  auth-url: ${AUTH_URL:http://127.0.0.1:8081}
+  auth-service-token: ${AUTH_SERVICE_TOKEN}
+  web-origin: ${WEB_ORIGIN:https://localhost}

@@ -1,6 +1,6 @@
 # auth
 
-Независимый Kotlin/Spring Boot scaffold. Доменные API ещё не реализованы.
+Auth: регистрация, session slot, интроспекция, encrypted login replay, WS tickets и сохраняемый CLOSING. Сквозной logout ожидает Game (этапы 4/9).
 
 Требуется JDK 25 для сборки и запуска; Spring Boot 3.5.16, Kotlin 2.3.21, JVM target 25.
 Spring Boot обновляется до последнего стабильного patch только в ветке 3.5.x, с точным закреплением версии.
@@ -14,6 +14,9 @@ Gradle Wrapper 9.8.1 включён в репозиторий с SHA-256 про�
 ```sh
 export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
 ```
+
+Для `bootRun` нужно настроенное окружение из Auth runbook ниже;
+скрипт `python3 scripts/run-service.py auth` из корня передаёт локальные credentials.
 
 Из этого каталога:
 
@@ -35,10 +38,5 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
 
 CLI ktlint 1.7.1 и detekt 1.23.8 закреплены в `config/quality.gradle.kts`.
 
-Для будущего идемпотентного login добавлен security/LoginResponseCipher.kt:
-AES-256-GCM, случайный nonce на каждый ответ, привязка ciphertext к userId,
-commandId и keyId, чтение старого keyId при ротации. Ключ предоставляет внешний
-keyProvider, компонент не загружает ключ из БД. Подключение к login, хранение
-ciphertext с TTL 24 часа и очистка ещё не реализованы; пункты Auth остаются открытыми.
-Ключи нельзя генерировать заново при каждом запуске приложения: используйте
-постоянное хранилище секретов и сохраняйте старый ключ до истечения всех ответов.
+
+Запуск с локальными credentials и описание API/ограничений: [Auth runbook](../../docs/runbooks/auth.md).

@@ -1,6 +1,20 @@
 spring:
   application:
     name: auth
+  datasource:
+    url: ${PG_JDBC_URL}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
+    hikari:
+      maximum-pool-size: 10
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
 server:
   port: ${PORT:8081}
   shutdown: graceful
@@ -13,3 +27,13 @@ management:
     health:
       probes:
         enabled: true
+auth:
+  service-token: ${AUTH_SERVICE_TOKEN}
+  login-key-file: ${AUTH_LOGIN_KEY_FILE}
+  login-key-id: ${AUTH_LOGIN_KEY_ID}
+  game-url: ${GAME_URL:http://localhost:8084}
+  game-service-token: ${GAME_SERVICE_TOKEN}
+events:
+  url: ${NATS_URL:nats://127.0.0.1:4222}
+  user: ${NATS_USER:app}
+  password: ${NATS_PASSWORD}

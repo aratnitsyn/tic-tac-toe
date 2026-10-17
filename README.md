@@ -1,10 +1,13 @@
 # tic-tac-toe
 
 Учебная микросервисная PvP-платформа. Требования и архитектура находятся в
-`openspec/changes/pvp-platform-v1/`. Сейчас реализованы только backend scaffold
-с health endpoints, без доменных API. Локальные PostgreSQL/Redis/NATS доступны через infra/local/compose.yml; доменные сервисы платформы ещё не реализованы.
+`openspec/changes/pvp-platform-v1/`. Реализованы Auth API, защищённый Gateway
+и минимальный событийный User. Сквозной logout ожидает реализацию Game;
+остальные игровые сервисы пока scaffold. Локальные PostgreSQL/Redis/NATS
+доступны через infra/local/compose.yml. Запуск и ограничения Auth:
+[docs/runbooks/auth.md](docs/runbooks/auth.md).
 
-## Backend scaffold
+## Backend
 
 Kotlin/Spring Boot: `api-gateway`, `auth`, `user`, `lobby`, `game`.
 Go: `matchmaking`, `realtime`. Все находятся в `services/`.

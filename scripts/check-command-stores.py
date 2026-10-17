@@ -17,7 +17,7 @@ def main():
     secrets = dict(line.split("=", 1) for line in (ROOT / "infra/local/.env").read_text().splitlines()
                    if line and not line.startswith("#"))
     shared_env = {**os.environ, "NATS_URL": "nats://127.0.0.1:4222", "NATS_USER": "app",
-                  "NATS_PASSWORD": secrets["NATS_PASSWORD"]}
+                  "NATS_PASSWORD": secrets["NATS_PASSWORD"], "REDIS_PASSWORD": secrets["REDIS_PASSWORD"]}
     if args.only != "go":
         for service in ("auth", "user", "lobby", "game"):
             if args.service and service != args.service:

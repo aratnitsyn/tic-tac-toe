@@ -1,6 +1,10 @@
 spring:
   application:
     name: user
+  datasource:
+    url: ${PG_JDBC_URL}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
 server:
   port: ${PORT:8082}
   shutdown: graceful
@@ -13,3 +17,8 @@ management:
     health:
       probes:
         enabled: true
+
+events:
+  url: ${NATS_URL:nats://127.0.0.1:4222}
+  user: ${NATS_USER:app}
+  password: ${NATS_PASSWORD}

@@ -11,3 +11,4 @@
 infra/local/certs/
 node_modules/
 __pycache__/
+infra/local/secrets/

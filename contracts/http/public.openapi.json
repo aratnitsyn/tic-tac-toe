@@ -134,6 +134,18 @@
               "type": "string"
             },
             "description": "Required for WEB clientType; obtained from /auth/csrf and bound to the pre-auth cookie. Not required for NATIVE."
+          },
+          {
+            "name": "X-Client-Type",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "NATIVE"
+              ]
+            },
+            "description": "Native pre-login requests without bearer send NATIVE and omit Origin/cookies. Browser Origin or session cookie always requires CSRF regardless of this header."
           }
         ],
         "responses": {
@@ -256,6 +268,18 @@
               "type": "string"
             },
             "description": "Required for WEB clientType; obtained from /auth/csrf and bound to the pre-auth cookie. Not required for NATIVE."
+          },
+          {
+            "name": "X-Client-Type",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "NATIVE"
+              ]
+            },
+            "description": "Native pre-login requests without bearer send NATIVE and omit Origin/cookies. Browser Origin or session cookie always requires CSRF regardless of this header."
           }
         ],
         "responses": {
