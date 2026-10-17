@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tictactoe.invalid/contracts/events/ws-server.schema.json",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "auth_ok"
+          ]
+        },
+        "connectionGeneration": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "type",
+        "connectionGeneration",
+        "serverTime"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "event"
+          ]
+        },
+        "event": {
+          "$ref": "domain-event.schema.json"
+        }
+      },
+      "required": [
+        "type",
+        "event"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "heartbeat_ack"
+          ]
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "type",
+        "requestId",
+        "serverTime"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "resync_required"
+          ]
+        },
+        "aggregateId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "type",
+        "aggregateId",
+        "serverTime"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "error"
+          ]
+        },
+        "error": {
+          "$ref": "common.schema.json#/$defs/Error"
+        }
+      },
+      "required": [
+        "type",
+        "error"
+      ]
+    }
+  ]
+}

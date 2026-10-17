@@ -1,0 +1,60 @@
+name: tictactoe-local
+services:
+  postgres:
+    image: postgres:17.6-bookworm
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/init-local.py}
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:?Run scripts/init-local.py}
+      USER_DB_PASSWORD: ${USER_DB_PASSWORD:?Run scripts/init-local.py}
+      LOBBY_DB_PASSWORD: ${LOBBY_DB_PASSWORD:?Run scripts/init-local.py}
+      MATCHMAKING_DB_PASSWORD: ${MATCHMAKING_DB_PASSWORD:?Run scripts/init-local.py}
+      GAME_DB_PASSWORD: ${GAME_DB_PASSWORD:?Run scripts/init-local.py}
+      REALTIME_DB_PASSWORD: ${REALTIME_DB_PASSWORD:?Run scripts/init-local.py}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init-services.sh:/docker-entrypoint-initdb.d/init-services.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:8.0.3-alpine
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Run scripts/init-local.py}
+    command:
+      - /bin/sh
+      - -ec
+      - 'exec redis-server --requirepass "$$REDIS_PASSWORD" --appendonly yes'
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -q PONG']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  nats:
+    image: nats:2.11.4-alpine
+    environment:
+      NATS_PASSWORD: ${NATS_PASSWORD:?Run scripts/init-local.py}
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - 'exec nats-server -js -sd /data -m 8222 --user app --pass "$$NATS_PASSWORD"'
+    ports:
+      - "127.0.0.1:4222:4222"
+      - "127.0.0.1:8222:8222"
+    volumes:
+      - nats-data:/data
+    healthcheck:
+      test: [CMD-SHELL, "wget -q -O /dev/null http://127.0.0.1:8222/healthz"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  postgres-data:
+  redis-data:
+  nats-data:

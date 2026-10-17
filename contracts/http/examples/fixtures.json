@@ -1,0 +1,59 @@
+[
+  {
+    "schema": "Credentials",
+    "valid": true,
+    "value": {
+      "email": "player@example.test",
+      "password": "Abc1!x",
+      "clientType": "NATIVE"
+    }
+  },
+  {
+    "schema": "Credentials",
+    "valid": false,
+    "value": {
+      "email": "bad",
+      "password": "short",
+      "clientType": "NATIVE"
+    }
+  },
+  {
+    "schema": "Move",
+    "valid": true,
+    "value": {
+      "expectedVersion": 0,
+      "cell": 8
+    }
+  },
+  {
+    "schema": "Move",
+    "valid": false,
+    "value": {
+      "expectedVersion": 0,
+      "cell": 9
+    }
+  },
+  {
+    "schema": "ParticipationResponse",
+    "valid": true,
+    "value": {
+      "serverTime": "2026-10-17T00:00:00Z",
+      "version": 1,
+      "data": {
+        "userId": "00000000-0000-4000-8000-000000000001",
+        "state": "MENU",
+        "version": 1
+      }
+    }
+  },
+  {
+    "schema": "Error",
+    "valid": true,
+    "value": {
+      "code": "VERSION_CONFLICT",
+      "message": "Refresh snapshot",
+      "serverTime": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003"
+    }
+  }
+]

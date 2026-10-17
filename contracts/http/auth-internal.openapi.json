@@ -1,0 +1,134 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Auth internal API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://auth:8081/internal/v1"
+    }
+  ],
+  "security": [
+    {
+      "serviceToken": []
+    }
+  ],
+  "paths": {
+    "/sessions/introspect": {
+      "post": {
+        "operationId": "introspectSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Introspection"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current session authority",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntrospectionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws-tickets/consume": {
+      "post": {
+        "operationId": "consumeWsTicket",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsumeTicket"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Current session authority",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntrospectionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "serviceToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Service-Token"
+      }
+    },
+    "schemas": {
+      "Introspection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "IntrospectionResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "active"
+        ]
+      },
+      "ConsumeTicket": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ticket": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "ticket"
+        ]
+      }
+    }
+  }
+}

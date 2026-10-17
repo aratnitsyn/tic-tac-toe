@@ -1,0 +1,25 @@
+[
+  {
+    "name": "DOMAIN_EVENTS",
+    "subjects": ["events.>"],
+    "retention": "limits",
+    "storage": "file",
+    "discard": "new",
+    "max_msgs": 1000000,
+    "max_bytes": 1073741824,
+    "max_age": 86400000000000,
+    "num_replicas": 1,
+    "duplicate_window": 120000000000
+  },
+  {
+    "name": "PARKING",
+    "subjects": ["parking.>"],
+    "retention": "limits",
+    "storage": "file",
+    "discard": "new",
+    "max_msgs": 100000,
+    "max_bytes": 268435456,
+    "max_age": 604800000000000,
+    "num_replicas": 1
+  }
+]

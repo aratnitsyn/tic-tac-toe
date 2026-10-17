@@ -1,0 +1,749 @@
+[
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "AccountRegistered",
+      "aggregateType": "ACCOUNT",
+      "payload": {
+        "userId": "00000000-0000-4000-8000-000000000001"
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "AccountRegistered",
+      "aggregateType": "ACCOUNT"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "ParticipationChanged",
+      "aggregateType": "PARTICIPATION",
+      "payload": {
+        "userId": "00000000-0000-4000-8000-000000000001",
+        "state": "MENU",
+        "version": 1
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "ParticipationChanged",
+      "aggregateType": "PARTICIPATION"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "LobbyChanged",
+      "aggregateType": "LOBBY",
+      "payload": {
+        "lobbyId": "00000000-0000-4000-8000-000000000003",
+        "code": "ABCDEFGH23",
+        "players": [
+          "00000000-0000-4000-8000-000000000001"
+        ],
+        "version": 1,
+        "status": "WAITING"
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "LobbyChanged",
+      "aggregateType": "LOBBY"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "QueueChanged",
+      "aggregateType": "QUEUE",
+      "payload": {
+        "ticketId": "00000000-0000-4000-8000-000000000003",
+        "userId": "00000000-0000-4000-8000-000000000001",
+        "originalSequence": "1",
+        "status": "AVAILABLE",
+        "version": 1
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "QueueChanged",
+      "aggregateType": "QUEUE"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "MatchReadyRequested",
+      "aggregateType": "MATCH",
+      "payload": {
+        "matchId": "00000000-0000-4000-8000-000000000003",
+        "source": "QUEUE",
+        "sourceRef": "00000000-0000-4000-8000-000000000003",
+        "state": "WAITING_READY",
+        "participants": [
+          {
+            "userId": "00000000-0000-4000-8000-000000000001",
+            "ready": false
+          },
+          {
+            "userId": "00000000-0000-4000-8000-000000000002",
+            "ready": false
+          }
+        ],
+        "version": 1,
+        "readyDeadline": "2026-10-17T00:00:00Z"
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "MatchReadyRequested",
+      "aggregateType": "MATCH"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "MatchCountdownStarted",
+      "aggregateType": "MATCH",
+      "payload": {
+        "matchId": "00000000-0000-4000-8000-000000000003",
+        "source": "QUEUE",
+        "sourceRef": "00000000-0000-4000-8000-000000000003",
+        "state": "COUNTDOWN",
+        "participants": [
+          {
+            "userId": "00000000-0000-4000-8000-000000000001",
+            "ready": false
+          },
+          {
+            "userId": "00000000-0000-4000-8000-000000000002",
+            "ready": false
+          }
+        ],
+        "version": 1,
+        "readyDeadline": "2026-10-17T00:00:00Z",
+        "startDeadline": "2026-10-17T00:00:00Z"
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "MatchCountdownStarted",
+      "aggregateType": "MATCH"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "MatchCancelled",
+      "aggregateType": "MATCH",
+      "payload": {
+        "matchId": "00000000-0000-4000-8000-000000000003",
+        "source": "QUEUE",
+        "sourceRef": "00000000-0000-4000-8000-000000000003",
+        "state": "CANCELLED",
+        "participants": [
+          {
+            "userId": "00000000-0000-4000-8000-000000000001",
+            "ready": false
+          },
+          {
+            "userId": "00000000-0000-4000-8000-000000000002",
+            "ready": false
+          }
+        ],
+        "version": 1,
+        "readyDeadline": "2026-10-17T00:00:00Z"
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "MatchCancelled",
+      "aggregateType": "MATCH"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "GameStarted",
+      "aggregateType": "GAME",
+      "payload": {
+        "matchId": "00000000-0000-4000-8000-000000000003",
+        "state": "X_TURN",
+        "board": [
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY"
+        ],
+        "xPlayerId": "00000000-0000-4000-8000-000000000001",
+        "oPlayerId": "00000000-0000-4000-8000-000000000002",
+        "version": 1,
+        "recoveryRemainingMs": {
+          "X": 30000,
+          "O": 30000
+        },
+        "disconnectedPlayers": [],
+        "turnDeadline": "2026-10-17T00:00:00Z"
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "GameStarted",
+      "aggregateType": "GAME"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "GameStateChanged",
+      "aggregateType": "GAME",
+      "payload": {
+        "matchId": "00000000-0000-4000-8000-000000000003",
+        "state": "O_TURN",
+        "board": [
+          "X",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY"
+        ],
+        "xPlayerId": "00000000-0000-4000-8000-000000000001",
+        "oPlayerId": "00000000-0000-4000-8000-000000000002",
+        "version": 1,
+        "recoveryRemainingMs": {
+          "X": 30000,
+          "O": 30000
+        },
+        "disconnectedPlayers": [],
+        "turnDeadline": "2026-10-17T00:00:00Z"
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "GameStateChanged",
+      "aggregateType": "GAME"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "GamePaused",
+      "aggregateType": "GAME",
+      "payload": {
+        "matchId": "00000000-0000-4000-8000-000000000003",
+        "state": "PAUSED",
+        "board": [
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY"
+        ],
+        "xPlayerId": "00000000-0000-4000-8000-000000000001",
+        "oPlayerId": "00000000-0000-4000-8000-000000000002",
+        "version": 1,
+        "recoveryRemainingMs": {
+          "X": 30000,
+          "O": 30000
+        },
+        "disconnectedPlayers": [
+          "00000000-0000-4000-8000-000000000001"
+        ],
+        "remainingTurnMs": 2000,
+        "recoveryDeadlines": {
+          "00000000-0000-4000-8000-000000000001": "2026-10-17T00:00:00Z"
+        }
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "GamePaused",
+      "aggregateType": "GAME"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "GameResumed",
+      "aggregateType": "GAME",
+      "payload": {
+        "matchId": "00000000-0000-4000-8000-000000000003",
+        "state": "X_TURN",
+        "board": [
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY"
+        ],
+        "xPlayerId": "00000000-0000-4000-8000-000000000001",
+        "oPlayerId": "00000000-0000-4000-8000-000000000002",
+        "version": 1,
+        "recoveryRemainingMs": {
+          "X": 30000,
+          "O": 30000
+        },
+        "disconnectedPlayers": [],
+        "turnDeadline": "2026-10-17T00:00:00Z"
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "GameResumed",
+      "aggregateType": "GAME"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "GameFinished",
+      "aggregateType": "GAME",
+      "payload": {
+        "matchId": "00000000-0000-4000-8000-000000000003",
+        "state": "FINISHED",
+        "board": [
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY",
+          "EMPTY"
+        ],
+        "xPlayerId": "00000000-0000-4000-8000-000000000001",
+        "oPlayerId": "00000000-0000-4000-8000-000000000002",
+        "version": 1,
+        "recoveryRemainingMs": {
+          "X": 30000,
+          "O": 30000
+        },
+        "disconnectedPlayers": [],
+        "result": {
+          "reason": "SURRENDER",
+          "outcome": "WIN",
+          "winnerId": "00000000-0000-4000-8000-000000000002",
+          "loserId": "00000000-0000-4000-8000-000000000001"
+        }
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "GameFinished",
+      "aggregateType": "GAME"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "SessionClosed",
+      "aggregateType": "SESSION",
+      "payload": {
+        "userId": "00000000-0000-4000-8000-000000000001",
+        "sessionId": "00000000-0000-4000-8000-000000000003"
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "SessionClosed",
+      "aggregateType": "SESSION"
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": true,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "ReturnToQueue",
+      "aggregateType": "PARTICIPATION",
+      "payload": {
+        "userId": "00000000-0000-4000-8000-000000000001",
+        "ticketId": "00000000-0000-4000-8000-000000000003",
+        "originalSequence": "1",
+        "participationVersion": 1
+      }
+    }
+  },
+  {
+    "schema": "domain-event.schema.json",
+    "valid": false,
+    "value": {
+      "eventId": "00000000-0000-4000-8000-000000000003",
+      "schemaVersion": 1,
+      "aggregateId": "00000000-0000-4000-8000-000000000003",
+      "aggregateVersion": 1,
+      "occurredAt": "2026-10-17T00:00:00Z",
+      "correlationId": "00000000-0000-4000-8000-000000000003",
+      "causationId": "00000000-0000-4000-8000-000000000003",
+      "recipientIds": [
+        "00000000-0000-4000-8000-000000000001"
+      ],
+      "type": "ReturnToQueue",
+      "aggregateType": "PARTICIPATION"
+    }
+  },
+  {
+    "schema": "ws-client.schema.json",
+    "valid": true,
+    "value": {
+      "type": "auth",
+      "ticket": "synthetic-test-ticket"
+    }
+  },
+  {
+    "schema": "ws-client.schema.json",
+    "valid": false,
+    "value": {
+      "type": "auth"
+    }
+  },
+  {
+    "schema": "ws-server.schema.json",
+    "valid": true,
+    "value": {
+      "type": "auth_ok",
+      "connectionGeneration": 1,
+      "serverTime": "2026-10-17T00:00:00Z"
+    }
+  }
+]

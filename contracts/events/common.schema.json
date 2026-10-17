@@ -1,0 +1,829 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tictactoe.invalid/contracts/events/common.schema.json",
+  "$defs": {
+    "Error": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": [
+            "UNAUTHENTICATED",
+            "SESSION_ALREADY_ACTIVE",
+            "PARTICIPATION_CONFLICT",
+            "VERSION_CONFLICT",
+            "DEADLINE_EXCEEDED",
+            "INVALID_MOVE",
+            "LOBBY_UNAVAILABLE",
+            "RATE_LIMITED",
+            "VALIDATION_ERROR",
+            "IDEMPOTENCY_CONFLICT",
+            "NOT_FOUND",
+            "SERVICE_UNAVAILABLE",
+            "FORBIDDEN"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "correlationId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "serverTime",
+        "correlationId"
+      ]
+    },
+    "Credentials": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254
+        },
+        "password": {
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 15,
+          "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};:,.?])[A-Za-z0-9!@#$%^&*()_+\\-=\\[\\]{};:,.?]{6,15}$"
+        },
+        "clientType": {
+          "type": "string",
+          "enum": [
+            "WEB",
+            "NATIVE"
+          ]
+        }
+      },
+      "required": [
+        "email",
+        "password",
+        "clientType"
+      ]
+    },
+    "ExpectedVersion": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "expectedVersion"
+      ]
+    },
+    "Participation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "MENU",
+            "LOBBY",
+            "QUEUED",
+            "IN_MATCH"
+          ]
+        },
+        "resourceId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "userId",
+        "version",
+        "state"
+      ]
+    },
+    "Account": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "emailVerified": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "userId",
+        "email",
+        "emailVerified"
+      ]
+    },
+    "Session": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "ACTIVE",
+            "CLOSING"
+          ]
+        },
+        "token": {
+          "type": "string",
+          "description": "Only for NATIVE login; WEB uses HttpOnly cookie."
+        }
+      },
+      "required": [
+        "userId",
+        "sessionId",
+        "expiresAt",
+        "state"
+      ]
+    },
+    "WsTicket": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ticket": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ticket",
+        "expiresAt"
+      ]
+    },
+    "Lobby": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "lobbyId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-HJ-NP-Z2-9]{10}$"
+        },
+        "players": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "WAITING",
+            "PREPARING",
+            "CLOSED"
+          ]
+        }
+      },
+      "required": [
+        "lobbyId",
+        "code",
+        "players",
+        "version",
+        "status"
+      ]
+    },
+    "QueueTicket": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ticketId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "userId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "originalSequence": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "AVAILABLE",
+            "RESERVED",
+            "CONSUMED",
+            "CANCELLED"
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "ticketId",
+        "userId",
+        "originalSequence",
+        "status",
+        "version"
+      ]
+    },
+    "Participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "ready": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "userId",
+        "ready"
+      ]
+    },
+    "Match": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "matchId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "QUEUE",
+            "LOBBY"
+          ]
+        },
+        "sourceRef": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "WAITING_READY",
+            "COUNTDOWN",
+            "RUNNING",
+            "CANCELLED",
+            "FINISHED"
+          ]
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/Participant"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "readyDeadline": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "startDeadline": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "matchId",
+        "source",
+        "sourceRef",
+        "state",
+        "participants",
+        "version"
+      ]
+    },
+    "GameResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "type": "string",
+          "enum": [
+            "WINNING_LINE",
+            "BOARD_FULL",
+            "TURN_TIMEOUT",
+            "SURRENDER",
+            "DISCONNECT_TIMEOUT",
+            "BOTH_DISCONNECTED_TIMEOUT"
+          ]
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "WIN",
+            "DRAW",
+            "NO_WINNER"
+          ]
+        },
+        "winnerId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "loserId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "reason",
+        "outcome"
+      ]
+    },
+    "Game": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "matchId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "X_TURN",
+            "O_TURN",
+            "PAUSED",
+            "FINISHED"
+          ]
+        },
+        "board": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "X",
+              "O",
+              "EMPTY"
+            ]
+          },
+          "minItems": 9,
+          "maxItems": 9
+        },
+        "xPlayerId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "oPlayerId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "turnDeadline": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "remainingTurnMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5000
+        },
+        "recoveryRemainingMs": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "X": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30000
+            },
+            "O": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 30000
+            }
+          },
+          "required": [
+            "X",
+            "O"
+          ]
+        },
+        "disconnectedPlayers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "recoveryDeadlines": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "result": {
+          "$ref": "common.schema.json#/$defs/GameResult"
+        }
+      },
+      "required": [
+        "matchId",
+        "state",
+        "board",
+        "xPlayerId",
+        "oPlayerId",
+        "version",
+        "recoveryRemainingMs",
+        "disconnectedPlayers"
+      ]
+    },
+    "Move": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cell": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8
+        }
+      },
+      "required": [
+        "expectedVersion",
+        "cell"
+      ]
+    },
+    "JoinLobby": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "expectedVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[A-HJ-NP-Z2-9]{10}$"
+        }
+      },
+      "required": [
+        "expectedVersion",
+        "code"
+      ]
+    },
+    "Csrf": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "headerName": {
+          "type": "string",
+          "enum": [
+            "X-CSRF-TOKEN"
+          ]
+        },
+        "token": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "headerName",
+        "token"
+      ]
+    },
+    "LogoutOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "CLOSING",
+            "CLOSED"
+          ]
+        }
+      },
+      "required": [
+        "operationId",
+        "state"
+      ]
+    },
+    "AccountResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/Account"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    },
+    "SessionResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/Session"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    },
+    "WsTicketResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/WsTicket"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    },
+    "ParticipationResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/Participation"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    },
+    "LobbyResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/Lobby"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    },
+    "QueueTicketResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/QueueTicket"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    },
+    "MatchResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/Match"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    },
+    "GameResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/Game"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    },
+    "CsrfResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/Csrf"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    },
+    "LogoutOperationResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/LogoutOperation"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    },
+    "UserProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "userId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "userId",
+        "version"
+      ]
+    },
+    "UserProfileResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "data": {
+          "$ref": "common.schema.json#/$defs/UserProfile"
+        }
+      },
+      "required": [
+        "serverTime",
+        "version",
+        "data"
+      ]
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Build output and local caches
+.gradle/
+.cache/
+**/build/
+**/bin/
+.DS_Store
+.env
+*.log
+.idea/
+.kotlin/
+infra/local/certs/
+node_modules/
+__pycache__/
