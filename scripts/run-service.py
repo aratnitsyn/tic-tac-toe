@@ -48,13 +48,13 @@ def environment(service):
     if service not in SERVICES:
         raise ValueError("Unknown service")
     env = read_env(ROOT / "services" / service / "local.env")
-    if service in ("auth", "user"):
+    if service in ("auth", "user", "game"):
         values = read_env(ROOT / "infra/local/.env")
         env.update({"PGPASSWORD": values[service.upper() + "_DB_PASSWORD"],
                     "NATS_PASSWORD": values["NATS_PASSWORD"]})
         if service == "auth":
             env["REDIS_PASSWORD"] = values["REDIS_PASSWORD"]
-    if service in ("auth", "api-gateway"):
+    if service in ("auth", "api-gateway", "game"):
         credentials, key_file = local_credentials()
         env.update({"AUTH_SERVICE_TOKEN": credentials["auth"],
                     "GAME_SERVICE_TOKEN": credentials["game"],

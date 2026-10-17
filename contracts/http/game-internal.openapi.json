@@ -28,6 +28,16 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Defaults to operationId. A retry retains the original stored correlationId."
           }
         ],
         "requestBody": {
@@ -50,8 +60,59 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "description": "CAS of authoritative participation. LOBBY joins an active room and atomically creates WAITING_READY for both players. QUEUED requires resourceId=ticketId."
       }
     },
     "/rooms/register": {
@@ -66,6 +127,16 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Defaults to operationId. A retry retains the original stored correlationId."
           }
         ],
         "requestBody": {
@@ -88,8 +159,59 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "description": "Atomically register a new room and claim its owner slot from MENU. Room identifiers are not reused after closure."
       }
     },
     "/matches/assign-pair": {
@@ -104,6 +226,16 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Defaults to operationId. A retry retains the original stored correlationId."
           }
         ],
         "requestBody": {
@@ -126,8 +258,59 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "description": "Atomically assign two QUEUED players to one WAITING_READY match. Ticket IDs and expected participation versions must match."
       }
     },
     "/connections/observe": {
@@ -268,8 +451,59 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Stable error code; no state is silently compensated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "description": "Read the durable original outcome. PENDING never means that the participants may be released by a timeout."
       }
     }
   },
@@ -420,7 +654,8 @@
           },
           "version": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "Participation version for a claim/registration; match version for pair formation; 0 for PENDING. Historical result, not a current snapshot."
           }
         },
         "required": [
@@ -573,6 +808,47 @@
         },
         "required": [
           "ticket"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "UNAUTHENTICATED",
+              "SESSION_ALREADY_ACTIVE",
+              "PARTICIPATION_CONFLICT",
+              "VERSION_CONFLICT",
+              "DEADLINE_EXCEEDED",
+              "INVALID_MOVE",
+              "LOBBY_UNAVAILABLE",
+              "RATE_LIMITED",
+              "VALIDATION_ERROR",
+              "IDEMPOTENCY_CONFLICT",
+              "NOT_FOUND",
+              "SERVICE_UNAVAILABLE",
+              "FORBIDDEN"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "correlationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "serverTime",
+          "correlationId"
         ]
       }
     }

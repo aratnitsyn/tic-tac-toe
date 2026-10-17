@@ -1,6 +1,13 @@
 spring:
   application:
     name: game
+  datasource:
+    url: ${PG_JDBC_URL}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
 server:
   port: ${PORT}
   shutdown: graceful
@@ -13,3 +20,11 @@ management:
     health:
       probes:
         enabled: true
+game:
+  service-token: ${GAME_SERVICE_TOKEN}
+events:
+  url: ${NATS_URL}
+  user: ${NATS_USER}
+  password: ${NATS_PASSWORD}
+coordination:
+  retry-delay: ${COORDINATION_RETRY_DELAY_MS}

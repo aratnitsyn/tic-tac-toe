@@ -79,3 +79,6 @@ python3 -m unittest discover -s scripts/tests -v
 Полный интеграционный прогон: `python3 scripts/check-command-stores.py` после
 подготовки локального стенда и streams. Он отклоняет несовместимые фильтры
 сервиса/языка и завершает работу с ошибкой при пропущенных тестах.
+
+Game: реестр участия, CAS и восстановление операций описаны в [runbook участия](docs/runbooks/participation.md).
+Проверка рестарта Game: `python3 scripts/check-participation-runtime.py` после сборки Auth/Gateway/Game и миграций.

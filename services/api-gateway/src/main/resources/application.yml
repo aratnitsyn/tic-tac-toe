@@ -17,3 +17,5 @@ gateway:
   auth-url: ${AUTH_URL}
   auth-service-token: ${AUTH_SERVICE_TOKEN}
   web-origin: ${WEB_ORIGIN}
+  game-url: ${GAME_URL}
+  game-service-token: ${GAME_SERVICE_TOKEN}

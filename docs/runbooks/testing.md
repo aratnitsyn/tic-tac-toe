@@ -23,6 +23,7 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
 python3 scripts/check-command-stores.py
 services/api-gateway/gradlew -p services/api-gateway clean build --no-daemon
 python3 scripts/check-auth-runtime.py
+python3 scripts/check-participation-runtime.py
 ```
 
 Стек PostgreSQL/Redis/NATS должен быть запущен по [local.md](local.md).
@@ -79,3 +80,7 @@ Kotlin и Go integration fixtures используют отдельные вре
 Сквозной logout с реальным Game ещё не реализован; тест logout проверяет adapter
 и состояние Auth, а не отсутствующую игровую логику. Kubernetes/Istio/TLS также
 не проверяются этими локальными HTTP-сценариями.
+
+Проверка участия запускает Auth/Gateway/Game, восстанавливает PENDING после
+рестарта Game и проверяет snapshots/повторы/корреляцию; создаёт два локальных
+аккаунта и один WAITING_READY матч. Подробности — [participation.md](participation.md).

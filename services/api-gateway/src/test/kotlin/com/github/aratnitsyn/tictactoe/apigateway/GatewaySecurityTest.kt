@@ -156,8 +156,28 @@ class GatewaySecurityTest {
             .isEqualTo("SESSION_ALREADY_ACTIVE")
     }
 
+    @Test
+    fun `participation forwards only introspected identity and game credential`() {
+        client
+            .get()
+            .uri("/api/v1/participation")
+            .header("Authorization", "Bearer valid")
+            .header("X-User-Id", "spoofed")
+            .header("X-Session-Id", "spoofed")
+            .header("X-Service-Token", "spoofed")
+            .exchange()
+            .expectStatus()
+            .isOk
+        assertEquals(USER_ID, seenUser.get())
+        assertEquals(SESSION_ID, seenSession.get())
+        assertEquals(GAME_TOKEN, seenServiceToken.get())
+    }
+
     companion object {
         private const val ORIGIN = "https://game.example.com"
+        private val USER_ID = UUID.randomUUID().toString()
+        private val SESSION_ID = UUID.randomUUID().toString()
+        private val GAME_TOKEN = UUID.randomUUID().toString()
         private val SERVICE_TOKEN = UUID.randomUUID().toString()
         private val mapper = jacksonObjectMapper()
         private val seenServiceToken = AtomicReference<String>()
@@ -186,8 +206,8 @@ class GatewaySecurityTest {
                                     mapper.writeValueAsString(
                                         mapOf(
                                             "active" to true,
-                                            "userId" to UUID.randomUUID(),
-                                            "sessionId" to UUID.randomUUID(),
+                                            "userId" to USER_ID,
+                                            "sessionId" to SESSION_ID,
                                         ),
                                     )
                                 } else {
@@ -219,6 +239,8 @@ class GatewaySecurityTest {
             registry.add("gateway.auth-url") { "http://127.0.0.1:${server.address.port}" }
             registry.add("gateway.auth-service-token") { SERVICE_TOKEN }
             registry.add("gateway.web-origin") { ORIGIN }
+            registry.add("gateway.game-url") { "http://127.0.0.1:${server.address.port}" }
+            registry.add("gateway.game-service-token") { GAME_TOKEN }
         }
 
         @JvmStatic

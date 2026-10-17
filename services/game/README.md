@@ -1,6 +1,8 @@
 # game
 
-Независимый Kotlin/Spring Boot scaffold. Доменные API ещё не реализованы.
+Kotlin/Spring Boot сервис реестра участия: CAS, регистрации комнат, атомарные пары
+WAITING_READY, durable coordination/reconciliation и outbox. Правила партии,
+таймеры подготовки и logout ещё не реализованы; см. [runbook](../../docs/runbooks/participation.md).
 
 Требуется JDK 25 для сборки и запуска; Spring Boot 3.5.16, Kotlin 2.3.21, JVM target 25.
 Spring Boot обновляется до последнего стабильного patch только в ветке 3.5.x, с точным закреплением версии.
@@ -19,6 +21,7 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
 
 ```sh
 ./gradlew clean build --no-daemon
+python3 ../../scripts/migrate.py game
 python3 ../../scripts/run-service.py game
 ```
 
