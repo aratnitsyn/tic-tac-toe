@@ -8,6 +8,12 @@ import com.github.aratnitsyn.tictactoe.auth.security.AuthRateLimit
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
+import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito.clearInvocations
+import org.mockito.Mockito.never
+import org.mockito.Mockito.spy
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
 import org.springframework.data.redis.connection.RedisPassword
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
@@ -34,7 +40,7 @@ class AuthRateLimitTest {
         val factory = LettuceConnectionFactory(configuration).apply { afterPropertiesSet() }
         try {
             val mapper = jacksonObjectMapper()
-            val hasher = PasswordHasher()
+            val hasher = spy(PasswordHasher())
             val key = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
             val controller =
                 AuthController(
@@ -49,6 +55,9 @@ class AuthRateLimitTest {
                     .webFilter<WebTestClient.ControllerSpec>(AuthRateLimit(StringRedisTemplate(factory), mapper))
                     .build()
             val email = "${UUID.randomUUID()}@example.com"
+            RegistrationService(database.source, hasher, mapper)
+                .register(UUID.randomUUID(), Credential(email, "Abc2!x", ClientType.NATIVE))
+            clearInvocations(hasher)
             repeat(10) {
                 client
                     .post()
@@ -60,9 +69,10 @@ class AuthRateLimitTest {
                     .expectStatus()
                     .isUnauthorized
             }
+            verify(hasher, times(10)).matches(anyString(), anyString())
             client
                 .post()
-                .uri("/api/v1/auth/login")
+                .uri("/api/v1/auth/register")
                 .header("Idempotency-Key", UUID.randomUUID().toString())
                 .header("X-Client-IP", UUID.randomUUID().toString())
                 .bodyValue(Credential(email, "Abc1!x", ClientType.NATIVE))
@@ -72,6 +82,8 @@ class AuthRateLimitTest {
                 .expectBody()
                 .jsonPath("$.code")
                 .isEqualTo("RATE_LIMITED")
+            verify(hasher, times(10)).matches(anyString(), anyString())
+            verify(hasher, never()).hash(anyString())
         } finally {
             factory.destroy()
         }

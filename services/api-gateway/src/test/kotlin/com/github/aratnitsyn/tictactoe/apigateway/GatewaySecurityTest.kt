@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.sun.net.httpserver.HttpServer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -118,6 +119,7 @@ class GatewaySecurityTest {
             .header("X-Client-Type", "NATIVE")
             .header("X-Service-Token", "attacker")
             .header("X-User-Id", "spoofed")
+            .header("X-Session-Id", "spoofed")
             .header("X-Client-IP", "spoofed")
             .bodyValue(mapOf("clientType" to "NATIVE"))
             .exchange()
@@ -125,6 +127,9 @@ class GatewaySecurityTest {
             .isOk
         assertEquals(SERVICE_TOKEN, seenServiceToken.get())
         assertEquals(null, seenUser.get())
+        assertEquals(null, seenSession.get())
+        assertNotEquals("spoofed", seenClientIp.get())
+        assertEquals("127.0.0.1", seenClientIp.get())
         client
             .post()
             .uri("/api/v1/auth/login")
@@ -157,6 +162,8 @@ class GatewaySecurityTest {
         private val mapper = jacksonObjectMapper()
         private val seenServiceToken = AtomicReference<String>()
         private val seenUser = AtomicReference<String>()
+        private val seenSession = AtomicReference<String>()
+        private val seenClientIp = AtomicReference<String>()
         private val server =
             HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
                 createContext("/") { exchange ->
@@ -169,6 +176,8 @@ class GatewaySecurityTest {
                         )
                     seenServiceToken.set(exchange.requestHeaders.getFirst("X-Service-Token"))
                     seenUser.set(exchange.requestHeaders.getFirst("X-User-Id"))
+                    seenSession.set(exchange.requestHeaders.getFirst("X-Session-Id"))
+                    seenClientIp.set(exchange.requestHeaders.getFirst("X-Client-IP"))
                     var status = 200
                     val response =
                         when {

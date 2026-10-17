@@ -38,7 +38,7 @@ class CredentialPolicyTest {
             "a@@example.com",
             "a b@example.com",
             "я@example.com",
-            "a@localhost",
+            "a@127.0.0.1",
             "a@-example.com",
         ).forEach {
             assertThrows(AuthFailure::class.java) { CredentialPolicy.email(it) }

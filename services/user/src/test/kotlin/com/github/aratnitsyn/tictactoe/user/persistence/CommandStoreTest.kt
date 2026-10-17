@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
-import org.postgresql.ds.PGSimpleDataSource
 import java.util.UUID
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
@@ -16,12 +15,12 @@ import java.util.concurrent.TimeUnit
 @EnabledIfEnvironmentVariable(named = "PG_JDBC_URL", matches = ".+")
 class CommandStoreTest {
     private val mapper = ObjectMapper()
-    private val source =
-        PGSimpleDataSource().apply {
-            setURL(System.getenv("PG_JDBC_URL"))
-            user = System.getenv("PGUSER")
-            password = System.getenv("PGPASSWORD")
-        }
+    private val database = UserTestDatabase()
+    private val source = database.source
+
+    @org.junit.jupiter.api.AfterEach
+    fun closeDatabase() = database.close()
+
     private val store = CommandStore(source)
     private val userId = UUID.randomUUID()
     private val commandId = UUID.randomUUID()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Start an Auth/User/Gateway process against the local dependencies without exposing secrets in argv."""
+"""Start a service using its local.env against the local dependencies without exposing secrets in argv."""
 import argparse
 import base64
 import json
@@ -27,27 +27,50 @@ def local_credentials():
     return json.loads(credentials.read_text()), key_file
 
 
+SERVICES = ("auth", "user", "api-gateway", "lobby", "game", "matchmaking", "realtime")
+
+
+def read_env(path):
+    """Read literal KEY=value entries; never evaluate shell code or interpolate secrets."""
+    values = {}
+    for number, line in enumerate(path.read_text().splitlines(), 1):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        key, separator, value = line.partition("=")
+        if not separator or not key.isidentifier() or not key.isascii():
+            raise ValueError(f"Invalid environment entry at {path}:{number}")
+        values[key] = value
+    return values
+
+
 def environment(service):
-    values = dict(line.split("=", 1) for line in (ROOT / "infra/local/.env").read_text().splitlines()
-                  if line and not line.startswith("#"))
-    credentials, key_file = local_credentials()
-    env = {**os.environ, "AUTH_SERVICE_TOKEN": credentials["auth"], "GAME_SERVICE_TOKEN": credentials["game"],
-           "AUTH_LOGIN_KEY_FILE": str(key_file), "AUTH_LOGIN_KEY_ID": "local-v1",
-           "NATS_URL": "nats://127.0.0.1:4222", "NATS_USER": "app", "NATS_PASSWORD": values["NATS_PASSWORD"],
-           "REDIS_PASSWORD": values["REDIS_PASSWORD"]}
+    if service not in SERVICES:
+        raise ValueError("Unknown service")
+    env = read_env(ROOT / "services" / service / "local.env")
     if service in ("auth", "user"):
-        env.update({"PG_JDBC_URL": "jdbc:postgresql://127.0.0.1:5432/" + service,
-                    "PGUSER": service, "PGPASSWORD": values[service.upper() + "_DB_PASSWORD"]})
-    return env
+        values = read_env(ROOT / "infra/local/.env")
+        env.update({"PGPASSWORD": values[service.upper() + "_DB_PASSWORD"],
+                    "NATS_PASSWORD": values["NATS_PASSWORD"]})
+        if service == "auth":
+            env["REDIS_PASSWORD"] = values["REDIS_PASSWORD"]
+    if service in ("auth", "api-gateway"):
+        credentials, key_file = local_credentials()
+        env.update({"AUTH_SERVICE_TOKEN": credentials["auth"],
+                    "GAME_SERVICE_TOKEN": credentials["game"],
+                    "AUTH_LOGIN_KEY_FILE": str(key_file)})
+    # Explicit shell/IDE values override both local settings and generated credentials.
+    return {**env, **os.environ}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("service", choices=("auth", "user", "api-gateway"))
+    parser.add_argument("service", choices=SERVICES)
     args = parser.parse_args()
-    subprocess.run([str(ROOT / "services" / args.service / "gradlew"), "-p",
-                    str(ROOT / "services" / args.service), "bootRun", "--no-daemon"],
-                   env=environment(args.service), check=True)
+    directory = ROOT / "services" / args.service
+    command = (["go", "run", "."] if args.service in ("matchmaking", "realtime") else
+               [str(directory / "gradlew"), "-p", str(directory), "bootRun", "--no-daemon"])
+    subprocess.run(command, cwd=directory, env=environment(args.service), check=True)
 
 
 if __name__ == "__main__":

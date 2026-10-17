@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aratnitsyn/tictactoe/services/matchmaking/internal/testutil"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
@@ -23,11 +25,7 @@ func fixture(t *testing.T) (context.Context, *pgxpool.Pool, nats.JetStreamContex
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	t.Cleanup(cancel)
-	pool, err := pgxpool.New(ctx, os.Getenv("PG_DSN"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(pool.Close)
+	pool := testutil.Database(t)
 	nc, err := nats.Connect(os.Getenv("NATS_URL"), nats.UserInfo(os.Getenv("NATS_USER"), os.Getenv("NATS_PASSWORD")))
 	if err != nil {
 		t.Fatal(err)

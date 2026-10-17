@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import java.time.Instant
+import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
@@ -69,14 +70,19 @@ class AuthPersistenceTest {
     fun `concurrent registrations with folded email create one account`() {
         val credentials = credentials()
         val results =
-            concurrent {
-                runCatching { registration.register(UUID.randomUUID(), credentials) }.isSuccess
+            concurrent { index ->
+                val email = if (index % 2 == 0) credentials.email.uppercase(Locale.ROOT) else credentials.email
+                val variant = Credential(email, credentials.password, credentials.clientType)
+                runCatching { registration.register(UUID.randomUUID(), variant) }
             }
-        assertEquals(1, results.count { it })
+        assertEquals(1, results.count { it.isSuccess })
+        results.filter { it.isFailure }.forEach {
+            assertEquals("VALIDATION_ERROR", (it.exceptionOrNull() as AuthFailure).code)
+        }
     }
 
     @Test
-    fun `concurrent login gives exactly one session and retry replays encrypted token`() {
+    fun `concurrent login gives exactly one active session`() {
         val credentials = credentials()
         registration.register(UUID.randomUUID(), credentials)
         val results = concurrent { runCatching { sessions.login(UUID.randomUUID(), credentials) } }
@@ -139,16 +145,16 @@ class AuthPersistenceTest {
         assertNotNull(sessions.introspect(login.token))
     }
 
-    private fun <T> concurrent(effect: () -> T): List<T> {
+    private fun <T> concurrent(effect: (Int) -> T): List<T> {
         val start = CountDownLatch(1)
         val executor = Executors.newFixedThreadPool(4)
         return try {
             val futures =
-                (1..4).map {
+                (1..4).map { index ->
                     executor.submit(
                         Callable {
                             start.await()
-                            effect()
+                            effect(index)
                         },
                     )
                 }

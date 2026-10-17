@@ -6,7 +6,7 @@ spring:
     username: ${PGUSER}
     password: ${PGPASSWORD}
 server:
-  port: ${PORT:8082}
+  port: ${PORT}
   shutdown: graceful
 management:
   endpoints:
@@ -19,6 +19,6 @@ management:
         enabled: true
 
 events:
-  url: ${NATS_URL:nats://127.0.0.1:4222}
-  user: ${NATS_USER:app}
+  url: ${NATS_URL}
+  user: ${NATS_USER}
   password: ${NATS_PASSWORD}

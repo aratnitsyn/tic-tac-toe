@@ -3,6 +3,13 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
+  script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m unittest discover -s scripts/tests -v
+      - run: python3 tools/contracts/check-structure.py
+      - run: bash -n scripts/check-go.sh scripts/check-local.sh scripts/install-go-tools.sh
   kotlin:
     runs-on: ubuntu-latest
     strategy:

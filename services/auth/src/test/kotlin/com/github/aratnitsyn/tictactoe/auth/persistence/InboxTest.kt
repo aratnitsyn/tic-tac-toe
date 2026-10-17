@@ -12,26 +12,55 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
-import org.postgresql.ds.PGSimpleDataSource
 import java.time.Duration
 import java.util.UUID
 
 @EnabledIfEnvironmentVariable(named = "PG_JDBC_URL", matches = ".+")
 class InboxTest {
-    private val source =
-        PGSimpleDataSource().apply {
-            setURL(System.getenv("PG_JDBC_URL"))
-            user = System.getenv("PGUSER")
-            password = System.getenv("PGPASSWORD")
-        }
+    private val database = AuthTestDatabase()
+    private val source = database.source
+
+    @org.junit.jupiter.api.AfterEach
+    fun closeDatabase() = database.close()
+
     private val inbox = Inbox(source)
+
+    @org.junit.jupiter.api.BeforeEach
+    fun prepareEffect() {
+        source.connection.use { connection ->
+            connection.createStatement().use {
+                it.execute("CREATE TABLE inbox_probe (event_id uuid PRIMARY KEY)")
+            }
+        }
+    }
+
+    private fun effect(
+        connection: java.sql.Connection,
+        eventId: UUID,
+    ) {
+        connection.prepareStatement("INSERT INTO inbox_probe VALUES (?)").use {
+            it.setObject(1, eventId)
+            it.executeUpdate()
+        }
+    }
+
+    private fun effects(): Int =
+        source.connection.use { connection ->
+            connection.createStatement().use {
+                it.executeQuery("SELECT count(*) FROM inbox_probe").use { rows ->
+                    rows.next()
+                    rows.getInt(1)
+                }
+            }
+        }
 
     @Test
     fun `committed effect is not repeated after lost acknowledgement`() {
         val eventId = UUID.randomUUID()
         val consumer = "test_$eventId"
-        assertTrue(inbox.process(consumer, eventId) { })
+        assertTrue(inbox.process(consumer, eventId) { effect(it, eventId) })
         assertFalse(inbox.process(consumer, eventId) { error("Must not repeat committed effect") })
+        assertEquals(1, effects())
     }
 
     @Test
@@ -39,9 +68,14 @@ class InboxTest {
         val eventId = UUID.randomUUID()
         val consumer = "test_$eventId"
         assertThrows(IllegalStateException::class.java) {
-            inbox.process(consumer, eventId) { error("Injected before commit") }
+            inbox.process(consumer, eventId) {
+                effect(it, eventId)
+                error("Injected before commit")
+            }
         }
-        assertTrue(inbox.process(consumer, eventId) { })
+        assertEquals(0, effects())
+        assertTrue(inbox.process(consumer, eventId) { effect(it, eventId) })
+        assertEquals(1, effects())
     }
 
     @Test

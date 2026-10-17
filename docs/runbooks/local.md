@@ -16,7 +16,7 @@ scripts/check-local.sh
 CA предназначен для последующего ingress/egress стенда: Compose не разворачивает
 Istio и не предоставляет внешние HTTPS/WSS endpoints.
 
-Доступны только localhost порты: PostgreSQL 5432, Redis 6379, NATS 4222,
+Доступны только 127.0.0.1 порты: PostgreSQL 5432, Redis 6379, NATS 4222,
 NATS monitoring 8222. Внутренний TCP без TLS соответствует принятой модели mesh.
 В Compose нет service mesh: его поведение будет проверено на Kubernetes отдельно.
 Учётная запись NATS — `app`, пароль берётся из `.env`; Redis требует пароль.

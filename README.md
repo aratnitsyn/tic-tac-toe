@@ -25,11 +25,11 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
 
 ```sh
 ./gradlew clean build --no-daemon
-./gradlew bootRun
+python3 ../../scripts/run-service.py <service>
 ```
 
 Проверки ktlint/detekt входят в build. Автоформатирование: `./gradlew ktlintFormat`.
-Из каталога Go-сервиса: `go build -o build/service .`, `go run .`.
+Из каталога Go-сервиса: `go build -o build/service .`, `python3 ../../scripts/run-service.py <service>`.
 Общие проверки Go из корня:
 
 ```sh
@@ -64,3 +64,18 @@ python3 tools/contracts/check-structure.py
 ```
 
 Полная schema-validation отложена по указанию пользователя и не считается пройденной.
+
+Локальный запуск через `scripts/run-service.py <service>` читает
+`services/<service>/local.env`. Переменные текущего окружения имеют приоритет.
+В этих файлах хранятся только несекретные настройки; источник локальных
+credentials описан в [Auth runbook](docs/runbooks/auth.md).
+
+Проверки локальных скриптов (без внешних зависимостей):
+
+```sh
+python3 -m unittest discover -s scripts/tests -v
+```
+
+Полный интеграционный прогон: `python3 scripts/check-command-stores.py` после
+подготовки локального стенда и streams. Он отклоняет несовместимые фильтры
+сервиса/языка и завершает работу с ошибкой при пропущенных тестах.

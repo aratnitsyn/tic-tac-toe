@@ -13,19 +13,17 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
-import org.postgresql.ds.PGSimpleDataSource
 import java.time.Duration
 import java.util.UUID
 
 @EnabledIfEnvironmentVariable(named = "PG_JDBC_URL", matches = ".+")
 class OutboxTest {
     private val mapper = ObjectMapper()
-    private val source =
-        PGSimpleDataSource().apply {
-            setURL(System.getenv("PG_JDBC_URL"))
-            user = System.getenv("PGUSER")
-            password = System.getenv("PGPASSWORD")
-        }
+    private val database = LobbyTestDatabase()
+    private val source = database.source
+
+    @org.junit.jupiter.api.AfterEach
+    fun closeDatabase() = database.close()
 
     @Test
     fun `crash after broker ack retries same event`() {

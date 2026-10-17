@@ -23,9 +23,14 @@ python3 scripts/run-service.py user
 python3 scripts/run-service.py api-gateway
 ```
 
-Скрипт читает существующий `infra/local/.env`, создаёт один раз
+Скрипт читает `services/<service>/local.env` с локальными портами и адресами,
+затем получает секреты из существующего `infra/local/.env` и создаёт один раз
 `infra/local/secrets/services.json` и `login-keys.properties` с правами 0600.
 Каталог игнорируется Git. Секреты передаются через окружение, не аргументы.
+Переменные текущего окружения имеют приоритет над `local.env` и локальными
+секретами. В `local.env` нет паролей или токенов; файл содержит буквальные
+`KEY=value` без shell-подстановок. Production-запуск не загружает `local.env`: все
+переменные из `application.yml` должны поступать из окружения развёртывания.
 Не удаляйте и не регенерируйте ключи при рестарте: потеря ключа делает replay
 недоступным. Это локальные секреты; в Kubernetes используйте Secret/secret manager.
 `AUTH_LOGIN_KEY_FILE` — properties-файл `keyId=base64` с 32 байтами AES-ключа;
@@ -65,7 +70,7 @@ Origin и cookies. После входа использует `Authorization: Be
 Web получает `/api/v1/auth/csrf`: `data.token`, `data.headerName` и pre-auth
 Secure HttpOnly SameSite=Strict cookie `__Host-CSRF`. Для изменяющих запросов
 передаёт разрешённый `Origin` и `X-CSRF-TOKEN`. Origin задаётся `WEB_ORIGIN`
-(локально `https://localhost`). Login выставляет `SESSION`: Secure HttpOnly,
+(локально `https://127.0.0.1`). Login выставляет `SESSION`: Secure HttpOnly,
 SameSite=Strict, Path=/api/v1. В JSON Web-login токен отсутствует.
 Browser-запрос не может отключить CSRF заголовком Native при наличии Origin
 или session cookie. Одновременные bearer и session cookie отклоняются.

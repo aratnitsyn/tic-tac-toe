@@ -22,10 +22,10 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
 
 ```sh
 ./gradlew clean build --no-daemon
-./gradlew bootRun
+python3 ../../scripts/run-service.py user
 ```
 
-Внутренний health endpoint: `http://localhost:8082/actuator/health`.
+Внутренний health endpoint: `http://127.0.0.1:8082/actuator/health`.
 Переменная `PORT` меняет порт. Внешний HTTPS/WSS предоставляет Istio ingress;
 локальный HTTP health endpoint не является публичным API.
 
@@ -39,3 +39,8 @@ export JAVA_HOME="$(/usr/libexec/java_home -v 25)"
 CLI ktlint 1.7.1 и detekt 1.23.8 закреплены в `config/quality.gradle.kts`.
 
 Запуск с локальными credentials и описание API/ограничений: [Auth runbook](../../docs/runbooks/auth.md).
+
+Локальный запуск через `scripts/run-service.py` читает `local.env` этого сервиса.
+Переменные текущего окружения имеют приоритет. В `local.env` хранятся только
+несекретные настройки; credentials поступают из локального хранилища инфраструктуры.
+Обычный запуск JAR/`bootRun` вне скрипта требует явно заданного окружения.

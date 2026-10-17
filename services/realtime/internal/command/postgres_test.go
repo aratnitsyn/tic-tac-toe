@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aratnitsyn/tictactoe/services/realtime/internal/testutil"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -34,11 +36,7 @@ func database(t *testing.T) (*pgxpool.Pool, context.Context) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	t.Cleanup(cancel)
-	pool, err := pgxpool.New(ctx, dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(pool.Close)
+	pool := testutil.Database(t)
 	if _, err := pool.Exec(ctx, "CREATE TABLE IF NOT EXISTS command_store_probe (id uuid PRIMARY KEY, amount integer NOT NULL)"); err != nil {
 		t.Fatal(err)
 	}
@@ -61,8 +59,13 @@ func TestConcurrentRetriesCommitOnce(t *testing.T) {
 				_, err := tx.Exec(ctx, "INSERT INTO command_store_probe VALUES ($1,1)", commandID)
 				return Response{Status: 200, Body: json.RawMessage(`{"accepted":true}`)}, err
 			})
-			if err == nil && result.Status != 200 {
-				err = fmt.Errorf("unexpected response status: %d", result.Status)
+			if err == nil {
+				var body struct {
+					Accepted bool `json:"accepted"`
+				}
+				if decodeErr := json.Unmarshal(result.Body, &body); decodeErr != nil || result.Status != 200 || !body.Accepted {
+					err = fmt.Errorf("unexpected replay response: %d %s", result.Status, result.Body)
+				}
 			}
 			failures <- err
 		}()

@@ -2,7 +2,7 @@ spring:
   application:
     name: lobby
 server:
-  port: ${PORT:8083}
+  port: ${PORT}
   shutdown: graceful
 management:
   endpoints:

@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aratnitsyn/tictactoe/services/realtime/internal/testutil"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
@@ -22,11 +24,7 @@ func setup(t *testing.T) (context.Context, *pgxpool.Pool, nats.JetStreamContext,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	t.Cleanup(cancel)
-	pool, err := pgxpool.New(ctx, os.Getenv("PG_DSN"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(pool.Close)
+	pool := testutil.Database(t)
 	nc, err := nats.Connect(os.Getenv("NATS_URL"), nats.UserInfo(os.Getenv("NATS_USER"), os.Getenv("NATS_PASSWORD")))
 	if err != nil {
 		t.Fatal(err)
@@ -66,16 +64,37 @@ func setup(t *testing.T) (context.Context, *pgxpool.Pool, nats.JetStreamContext,
 func TestInboxDuplicateAndRollback(t *testing.T) {
 	ctx, pool, _, _, consumer, _, eventID := setup(t)
 	store := Store{DB: pool}
-	injected := errors.New("injected before commit")
-	if _, err := store.Process(ctx, consumer, eventID, func(pgx.Tx) error { return injected }); !errors.Is(err, injected) {
+	if _, err := pool.Exec(ctx, "CREATE TABLE inbox_probe (event_id uuid PRIMARY KEY)"); err != nil {
 		t.Fatal(err)
 	}
-	if first, err := store.Process(ctx, consumer, eventID, func(pgx.Tx) error { return nil }); err != nil || !first {
+	effect := func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, "INSERT INTO inbox_probe VALUES ($1)", eventID)
+		return err
+	}
+	count := func(want int) {
+		t.Helper()
+		var got int
+		if err := pool.QueryRow(ctx, "SELECT count(*) FROM inbox_probe").Scan(&got); err != nil || got != want {
+			t.Fatalf("expected %d domain effects, got %d: %v", want, got, err)
+		}
+	}
+	injected := errors.New("injected before commit")
+	if _, err := store.Process(ctx, consumer, eventID, func(tx pgx.Tx) error {
+		if err := effect(tx); err != nil {
+			return err
+		}
+		return injected
+	}); !errors.Is(err, injected) {
+		t.Fatal(err)
+	}
+	count(0)
+	if first, err := store.Process(ctx, consumer, eventID, effect); err != nil || !first {
 		t.Fatalf("expected retry after rollback: %v", err)
 	}
 	if first, err := store.Process(ctx, consumer, eventID, func(pgx.Tx) error { t.Error("committed effect repeated"); return nil }); err != nil || first {
 		t.Fatalf("duplicate not suppressed: %v", err)
 	}
+	count(1)
 }
 
 func TestRetryThenParking(t *testing.T) {
