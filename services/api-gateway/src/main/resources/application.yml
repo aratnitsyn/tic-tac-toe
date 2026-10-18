@@ -21,3 +21,5 @@ gateway:
   game-service-token: ${GAME_SERVICE_TOKEN}
   lobby-url: ${LOBBY_URL}
   lobby-service-token: ${LOBBY_SERVICE_TOKEN}
+  matchmaking-url: ${MATCHMAKING_URL}
+  matchmaking-service-token: ${MATCHMAKING_SERVICE_TOKEN}

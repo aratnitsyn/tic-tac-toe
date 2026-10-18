@@ -47,7 +47,7 @@ class LocalEnvironmentTest(unittest.TestCase):
         infra.mkdir(parents=True)
         (infra / ".env").write_text("AUTH_DB_PASSWORD=generated\nNATS_PASSWORD=nats\nREDIS_PASSWORD=redis\n")
         with patch.object(runner, "ROOT", self.root), patch.object(
-            runner, "local_credentials", return_value=({"auth": "auth-key", "game": "game-key", "lobby": "lobby-key"}, Path("key-file"))
+            runner, "local_credentials", return_value=({"auth": "auth-key", "game": "game-key", "lobby": "lobby-key", "matchmaking": "matchmaking-key"}, Path("key-file"))
         ), patch.dict(os.environ, {"PORT": "19001", "AUTH_SERVICE_TOKEN": "override"}, clear=True):
             env = runner.environment("auth")
         self.assertEqual("19001", env["PORT"])
@@ -63,7 +63,7 @@ class LocalEnvironmentTest(unittest.TestCase):
         infra.mkdir(parents=True)
         (infra / ".env").write_text("LOBBY_DB_PASSWORD=lobby-password\nNATS_PASSWORD=nats\n")
         with patch.object(runner, "ROOT", self.root), patch.object(
-            runner, "local_credentials", return_value=({"auth": "a", "game": "g", "lobby": "l"}, Path("key-file"))
+            runner, "local_credentials", return_value=({"auth": "a", "game": "g", "lobby": "l", "matchmaking": "m"}, Path("key-file"))
         ), patch.dict(os.environ, {}, clear=True):
             env = runner.environment("lobby")
         self.assertEqual("lobby-password", env["PGPASSWORD"])
@@ -84,7 +84,23 @@ class LocalEnvironmentTest(unittest.TestCase):
         self.assertEqual("existing-auth", first["auth"])
         self.assertEqual("existing-game", first["game"])
         self.assertGreaterEqual(len(first["lobby"]), 32)
+        self.assertGreaterEqual(len(first["matchmaking"]), 32)
         self.assertEqual("existing-key", (directory / "login-keys.properties").read_text())
+
+    def test_matchmaking_database_password_and_shell_dsn_override(self):
+        service = self.root / "services/matchmaking"
+        service.mkdir(parents=True)
+        (service / "local.env").write_text("PORT=8085\nPG_DSN=local-dsn\n")
+        infra = self.root / "infra/local"
+        infra.mkdir(parents=True)
+        (infra / ".env").write_text("MATCHMAKING_DB_PASSWORD=queue-password\nNATS_PASSWORD=nats\n")
+        with patch.object(runner, "ROOT", self.root), patch.object(
+            runner, "local_credentials", return_value=({"auth": "a", "game": "g", "lobby": "l", "matchmaking": "m"}, Path("key"))
+        ), patch.dict(os.environ, {"PG_DSN": "custom-dsn"}, clear=True):
+            env = runner.environment("matchmaking")
+        self.assertEqual("queue-password", env["PGPASSWORD"])
+        self.assertEqual("custom-dsn", env["PG_DSN"])
+        self.assertEqual("m", env["MATCHMAKING_SERVICE_TOKEN"])
 
     def test_go_scaffold_does_not_require_infrastructure_files(self):
         service = self.root / "services/realtime"

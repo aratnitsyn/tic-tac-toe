@@ -1497,7 +1497,7 @@
             }
           }
         },
-        "description": "expectedVersion refers to participation. Deadline is exclusive and checked using server time.",
+        "description": "expectedVersion refers to participation MENU. Admission order is assigned after Game confirms QUEUED. Retry timeout/503 with the original Idempotency-Key; replay returns the historical ticket response. Read participation and ticket snapshots afterwards.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1604,7 +1604,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Returns the authenticated user’s latest ticket. Before admission completes it may return 404; retry the original join command. Ticket version is separate from participation version."
       }
     },
     "/matchmaking/queue/cancel": {
@@ -1716,7 +1717,7 @@
             }
           }
         },
-        "description": "expectedVersion refers to participation. Deadline is exclusive and checked using server time.",
+        "description": "expectedVersion refers to current participation QUEUED. A successful cancel returns MENU. If AssignPair wins, 409 leaves IN_MATCH intact; read /participation for the current match. Retry unknown outcomes using the original Idempotency-Key.",
         "requestBody": {
           "required": true,
           "content": {

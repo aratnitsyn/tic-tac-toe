@@ -201,6 +201,31 @@ class GatewaySecurityTest {
             .isForbidden
     }
 
+    @Test
+    fun `matchmaking uses its credential and authenticated identity`() {
+        client
+            .get()
+            .uri("/api/v1/matchmaking/queue")
+            .exchange()
+            .expectStatus()
+            .isUnauthorized
+        client
+            .post()
+            .uri("/api/v1/matchmaking/queue")
+            .header("Authorization", "Bearer valid")
+            .header("X-Client-Type", "NATIVE")
+            .header("X-User-Id", "spoofed")
+            .header("X-Session-Id", "spoofed")
+            .header("X-Service-Token", "spoofed")
+            .bodyValue(mapOf("expectedVersion" to 0))
+            .exchange()
+            .expectStatus()
+            .isOk
+        assertEquals(USER_ID, seenUser.get())
+        assertEquals(SESSION_ID, seenSession.get())
+        assertEquals("matchmaking-service-test-token-32-characters", seenServiceToken.get())
+    }
+
     companion object {
         private const val ORIGIN = "https://game.example.com"
         private val USER_ID = UUID.randomUUID().toString()
@@ -270,6 +295,8 @@ class GatewaySecurityTest {
             registry.add("gateway.web-origin") { ORIGIN }
             registry.add("gateway.game-url") { "http://127.0.0.1:${server.address.port}" }
             registry.add("gateway.game-service-token") { GAME_TOKEN }
+            registry.add("gateway.matchmaking-url") { "http://127.0.0.1:${server.address.port}" }
+            registry.add("gateway.matchmaking-service-token") { "matchmaking-service-test-token-32-characters" }
             registry.add("gateway.lobby-url") { "http://127.0.0.1:${server.address.port}" }
             registry.add("gateway.lobby-service-token") { LOBBY_TOKEN }
         }

@@ -91,3 +91,18 @@ Kotlin и Go integration fixtures используют отдельные вре
 при replay, проверяет доступ и лимит кода. Создаёт пять локальных аккаунтов и до двух
 WAITING_READY матчей. Пункт 5.4 проверен только на уровне подготовленного обработчика;
 сквозная отмена/возврат ждёт этап 7. Подробности — [lobby.md](lobby.md).
+
+## FIFO Matchmaking
+
+```sh
+python3 scripts/check-command-stores.py --only go --service matchmaking
+python3 scripts/benchmark-matchmaking.py
+JAVA_HOME="$(/usr/libexec/java_home -v 25)" python3 scripts/check-matchmaking-runtime.py
+```
+
+Перед smoke соберите Auth/Game/Gateway JAR и бинарный Matchmaking, примените миграцию
+Matchmaking и bootstrap streams. Smoke создаёт четыре аккаунта и один WAITING_READY
+матч; сохраняет тестовые записи, останавливает свои процессы. Проверяет FIFO,
+потерянный AssignPair response, restart/replay и cancel без освобождения IN_MATCH.
+Подготовленные return/generation тесты не заменяют интеграцию этапов 7/10; 6.5 открыт.
+Подробности и измерения — matchmaking.md и ../performance/matchmaking-local.md.
