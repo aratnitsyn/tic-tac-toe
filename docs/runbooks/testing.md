@@ -26,6 +26,7 @@ python3 scripts/check-auth-runtime.py
 python3 scripts/check-participation-runtime.py
 python3 scripts/check-lobby-runtime.py
 python3 scripts/check-preparation-runtime.py
+python3 scripts/check-play-runtime.py
 ```
 
 Стек PostgreSQL/Redis/NATS должен быть запущен по [local.md](local.md).
@@ -117,3 +118,13 @@ Matchmaking и bootstrap streams. Smoke создаёт четыре аккаун
 Точные границы времени, полная матрица готовности, гонка close/start, rollback
 создания партии и 48 модельных последовательностей проверяются в Game с реальным
 PostgreSQL и управляемым временем. Это не проверка WSS или игровых ходов.
+
+## Партия и надёжные таймеры
+
+`check-play-runtime.py` запускает Auth/Gateway/Lobby/Game, создаёт три аккаунта и
+три матча. Проверяет подтверждённый ход и replay после SIGKILL Game, сохранность X/O,
+рестарт в PAUSED без сброса recovery deadline/остатка хода, reconnect, старый close,
+сдачу, освобождение обоих и фоновый TURN_TIMEOUT с единственным GameFinished.
+Данные остаются локально. Точные временные границы, независимые запасы, generation
+таймеров, retry после потери lease, DB row lock и гонки завершения проверяются
+в Game на PostgreSQL; правила поля — чистыми тестами. См. [play.md](play.md).

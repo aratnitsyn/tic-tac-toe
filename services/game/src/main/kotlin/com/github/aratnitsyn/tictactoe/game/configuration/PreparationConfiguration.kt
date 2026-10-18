@@ -2,6 +2,7 @@ package com.github.aratnitsyn.tictactoe.game.configuration
 
 import com.github.aratnitsyn.tictactoe.game.participation.CoordinationDatabase
 import com.github.aratnitsyn.tictactoe.game.persistence.CommandStore
+import com.github.aratnitsyn.tictactoe.game.play.PlayEngine
 import com.github.aratnitsyn.tictactoe.game.preparation.PreparationEvent
 import com.github.aratnitsyn.tictactoe.game.preparation.PreparationReturn
 import com.github.aratnitsyn.tictactoe.game.preparation.PreparationService
@@ -24,5 +25,6 @@ class PreparationConfiguration {
         store: PreparationStore,
         event: PreparationEvent,
         returns: PreparationReturn,
-    ) = PreparationService(store, CommandStore(store.db.source, store.db.mapper), event, returns)
+        play: PlayEngine,
+    ) = PreparationService(store, CommandStore(store.db.source, store.db.mapper), event, returns, play = play)
 }

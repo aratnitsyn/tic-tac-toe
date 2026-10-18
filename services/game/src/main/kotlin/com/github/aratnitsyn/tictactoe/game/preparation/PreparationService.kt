@@ -5,6 +5,9 @@ import com.github.aratnitsyn.tictactoe.game.participation.CoordinationEvent
 import com.github.aratnitsyn.tictactoe.game.participation.CoordinationFailure
 import com.github.aratnitsyn.tictactoe.game.persistence.CommandResponse
 import com.github.aratnitsyn.tictactoe.game.persistence.CommandStore
+import com.github.aratnitsyn.tictactoe.game.play.PlayDeadlineStore
+import com.github.aratnitsyn.tictactoe.game.play.PlayEngine
+import com.github.aratnitsyn.tictactoe.game.play.PlayStore
 import org.springframework.http.HttpStatus
 import java.sql.Connection
 import java.sql.Timestamp
@@ -19,6 +22,7 @@ class PreparationService(
     private val events: PreparationEvent,
     private val returns: PreparationReturn,
     private val clock: (Connection) -> Instant = store.db::now,
+    private val play: PlayEngine = PlayEngine(store.db, PlayStore(store.db), events, PlayDeadlineStore(store.db)),
 ) {
     private val db = store.db
 
@@ -97,16 +101,12 @@ class PreparationService(
         return commands.execute(user, "OBSERVE/$id", command, payload) { connection ->
             var match = store.lock(connection, id)
             authorize(match, user)
-            advance(connection, match, command)
+            val checkedAt = advance(connection, match, command)
             match = store.lock(connection, id)
             val member = match.members.single { it.user == user }
             val connected = payload["connected"].asBoolean()
             val next = generation
             val applies = next > member.generation || (next == member.generation && member.connected && !connected)
-            if (applies && match.state == "RUNNING") {
-                // Active-game pause belongs to stage 8, never silently accept a close here.
-                return@execute error(connection, command, "INVALID_STATE")
-            }
             if (applies && match.state != "FINISHED") {
                 db.update(
                     connection,
@@ -116,7 +116,12 @@ class PreparationService(
                     id,
                     user,
                 )
-                if (!connected) disconnected(connection, store.lock(connection, id), user, command)
+                val current = store.lock(connection, id)
+                if (current.state == "RUNNING") {
+                    play.connection(connection, current, user, command, checkedAt)
+                } else if (!connected) {
+                    disconnected(connection, current, user, command)
+                }
             }
             val result =
                 db.mapper
@@ -164,13 +169,15 @@ class PreparationService(
             }
         }
 
-    private fun advance(
+    fun advance(
         connection: Connection,
         match: PreparedMatch,
         cause: UUID,
-    ) {
+    ): Instant {
         val now = clock(connection)
-        if (match.state == "WAITING_READY" && !now.isBefore(match.readyDeadline)) {
+        if (match.state == "RUNNING") {
+            play.advance(connection, match, cause, now)
+        } else if (match.state == "WAITING_READY" && !now.isBefore(match.readyDeadline)) {
             returns.cancel(connection, match, cause, false)
             publish(connection, store.lock(connection, match.id), cause, "MatchCancelled")
         } else if (match.state == "COUNTDOWN" && !now.isBefore(requireNotNull(match.startDeadline))) {
@@ -181,6 +188,7 @@ class PreparationService(
                 start(connection, match, cause, now)
             }
         }
+        return now
     }
 
     private fun start(
@@ -189,32 +197,7 @@ class PreparationService(
         cause: UUID,
         now: Instant,
     ) {
-        val players = match.members.map { it.user }.shuffled()
-        val board = db.mapper.createArrayNode().apply { repeat(BOARD_SIZE) { add("EMPTY") } }
-        db.update(
-            connection,
-            "INSERT INTO game(match_id,state,board,x_player_id,o_player_id,turn_deadline) " +
-                "VALUES (?,'X_TURN',?::jsonb,?,?,?)",
-            match.id,
-            board.toString(),
-            players[0],
-            players[1],
-            Timestamp.from(now.plusSeconds(TURN_SECONDS)),
-        )
-        db.update(connection, "UPDATE game_match SET state='RUNNING',version=version+1 WHERE match_id=?", match.id)
-        val game =
-            db.mapper.createObjectNode().apply {
-                put("matchId", match.id.toString())
-                put("state", "X_TURN")
-                set<JsonNode>("board", board)
-                put("xPlayerId", players[0].toString())
-                put("oPlayerId", players[1].toString())
-                put("version", 0)
-                put("turnDeadline", now.plusSeconds(TURN_SECONDS).toString())
-                putObject("recoveryRemainingMs").put("X", RECOVERY_MS).put("O", RECOVERY_MS)
-                putArray("disconnectedPlayers")
-            }
-        events.emit(connection, match, cause, CoordinationEvent("GameStarted", "GAME", match.id, 0, players, game))
+        play.start(connection, match, cause, now)
     }
 
     private fun authorize(
@@ -269,6 +252,3 @@ class PreparationService(
 }
 
 private const val COUNTDOWN_SECONDS = 5L
-private const val TURN_SECONDS = 5L
-private const val BOARD_SIZE = 9
-private const val RECOVERY_MS = 30000

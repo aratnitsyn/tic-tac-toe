@@ -19,8 +19,14 @@ class ParticipationRouteConfiguration(
             .routes()
             .route("participation") {
                 it
-                    .path("/api/v1/participation", "/api/v1/matches/*", "/api/v1/matches/*/ready")
-                    .filters { filters ->
+                    .path(
+                        "/api/v1/participation",
+                        "/api/v1/matches/*",
+                        "/api/v1/matches/*/ready",
+                        "/api/v1/games/*",
+                        "/api/v1/games/*/moves",
+                        "/api/v1/games/*/surrender",
+                    ).filters { filters ->
                         filters
                             .removeRequestHeader("Authorization")
                             .removeRequestHeader("Cookie")

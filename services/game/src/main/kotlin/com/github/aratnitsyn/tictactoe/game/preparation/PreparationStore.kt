@@ -75,6 +75,10 @@ class PreparationStore(
                     }
                 }
             }
+        connection.prepareStatement("SELECT match_id FROM game WHERE match_id=? FOR UPDATE").use {
+            it.setObject(1, id)
+            it.executeQuery().use { row -> row.next() }
+        }
         return connection.prepareStatement("SELECT * FROM game_match WHERE match_id=? FOR UPDATE").use {
             it.setObject(1, id)
             it.executeQuery().use { row ->

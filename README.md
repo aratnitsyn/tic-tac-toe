@@ -4,7 +4,8 @@
 `openspec/changes/pvp-platform-v1/`. Реализованы Auth API, защищённый Gateway,
 минимальный событийный User, реестр участия Game, Lobby с приватными кодами и FIFO Matchmaking.
 Реализована [подготовка матча](docs/runbooks/preparation.md): готовность, отсчёт, старт и отмена с возвратом.
-Сквозной logout, ходы и завершение партии ещё не реализованы; Realtime пока scaffold. Локальные PostgreSQL/Redis/NATS
+Реализована [партия](docs/runbooks/play.md): ходы, результат, сдача, пауза и надёжные таймеры.
+Сквозной logout ещё не реализован; Realtime пока scaffold. Локальные PostgreSQL/Redis/NATS
 доступны через infra/local/compose.yml. Запуск и ограничения Auth:
 [docs/runbooks/auth.md](docs/runbooks/auth.md).
 

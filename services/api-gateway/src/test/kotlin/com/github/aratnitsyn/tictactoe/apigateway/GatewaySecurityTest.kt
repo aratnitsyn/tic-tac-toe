@@ -207,6 +207,41 @@ class GatewaySecurityTest {
     }
 
     @Test
+    fun `game move and surrender routes require auth and replace trusted headers`() {
+        val path = "/api/v1/games/" + java.util.UUID.randomUUID()
+        client
+            .get()
+            .uri(path)
+            .exchange()
+            .expectStatus()
+            .isUnauthorized
+        for (action in listOf("moves", "surrender")) {
+            client
+                .post()
+                .uri("$path/$action")
+                .header("X-Client-Type", "NATIVE")
+                .bodyValue(mapOf("expectedVersion" to 0))
+                .exchange()
+                .expectStatus()
+                .isUnauthorized
+            client
+                .post()
+                .uri("$path/$action")
+                .header("Authorization", "Bearer valid")
+                .header("X-Client-Type", "NATIVE")
+                .header("X-User-Id", "spoofed")
+                .header("X-Service-Token", "spoofed")
+                .bodyValue(mapOf("expectedVersion" to 0))
+                .exchange()
+                .expectStatus()
+                .isOk
+            assertEquals(USER_ID, seenUser.get())
+            assertEquals(SESSION_ID, seenSession.get())
+            assertEquals(GAME_TOKEN, seenServiceToken.get())
+        }
+    }
+
+    @Test
     fun `lobby forwards authenticated identity credential and peer IP without client spoofing`() {
         client
             .post()
