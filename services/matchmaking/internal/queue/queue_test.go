@@ -399,7 +399,7 @@ func TestReturnOriginalPriorityAndInbox(t *testing.T) {
 	event := encode(map[string]any{"eventId": UUID(), "type": "ReturnToQueue", "aggregateVersion": p.Version, "correlationId": UUID(), "payload": map[string]any{"userId": a.User, "ticketId": a.ID, "originalSequence": a.Sequence, "participationVersion": p.Version}})
 	store := inbox.Store{DB: s.DB}
 	for i := 0; i < 2; i++ {
-		first, err := store.Process(ctx, "queue-return-test", pair, func(tx pgx.Tx) error { return s.Return(ctx, tx, event, p) })
+		first, err := store.Process(ctx, "queue-return-test", pair, func(tx pgx.Tx) error { return s.Consume(ctx, tx, event) })
 		if err != nil || first != (i == 0) {
 			t.Fatal("return inbox", err)
 		}
@@ -551,5 +551,90 @@ func TestActualConcurrentCancelAndAssign(t *testing.T) {
 		} else if p.State != "IN_MATCH" || cancelStatus != 409 || g.pairCount != 1 || read(t, s, a.ID).Status != "CONSUMED" {
 			t.Fatal("assignment race inconsistent")
 		}
+	}
+}
+
+func TestParticipationCleanupCannotCancelNewTicket(t *testing.T) {
+	s, g := fixture(t)
+	ctx := context.Background()
+	a := join(t, s, UUID())
+	g.mu.Lock()
+	p := g.people[a.User]
+	p.State = "MENU"
+	p.Resource = ""
+	p.Version++
+	g.people[a.User] = p
+	g.mu.Unlock()
+	raw := encode(map[string]any{"type": "ParticipationChanged", "eventId": UUID(), "correlationId": UUID(), "payload": p})
+	apply := func() {
+		t.Helper()
+		if err := s.read(ctx, func(tx pgx.Tx) error { return s.Consume(ctx, tx, raw) }); err != nil {
+			t.Fatal(err)
+		}
+	}
+	apply()
+	if read(t, s, a.ID).Status != "CANCELLED" {
+		t.Fatal("old availability retained")
+	}
+	r, err := s.Execute(ctx, a.User, "JOIN", UUID(), UUID(), encode(map[string]any{"expectedVersion": p.Version}))
+	if err != nil || r.Status != 201 {
+		t.Fatal("new search rejected", err)
+	}
+	var response struct {
+		Data Ticket `json:"data"`
+	}
+	if err = json.Unmarshal(r.Body, &response); err != nil {
+		t.Fatal(err)
+	}
+	apply()
+	if read(t, s, response.Data.ID).Status != "AVAILABLE" {
+		t.Fatal("old cleanup cancelled new ticket")
+	}
+}
+
+func TestEarlyReturnRetriesInboxUntilConsumed(t *testing.T) {
+	s, g := fixture(t)
+	ctx := context.Background()
+	a := join(t, s, UUID())
+	join(t, s, UUID())
+	pair, err := s.Select(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s.AfterGame = func() error { return errors.New("crash after Game commit") }
+	if _, err = s.Resume(ctx, pair); err == nil {
+		t.Fatal("missing crash")
+	}
+	g.mu.Lock()
+	p := g.people[a.User]
+	p.State = "QUEUED"
+	p.Resource = a.ID
+	p.Version++
+	g.people[a.User] = p
+	g.mu.Unlock()
+	id := UUID()
+	raw := encode(map[string]any{"type": "ReturnToQueue", "eventId": id, "correlationId": UUID(), "aggregateVersion": p.Version, "payload": map[string]any{"userId": p.User, "ticketId": a.ID, "originalSequence": a.Sequence, "participationVersion": p.Version}})
+	store := inbox.Store{DB: s.DB}
+	apply := func() (bool, error) {
+		return store.Process(ctx, "early-return-test", id, func(tx pgx.Tx) error { return s.Consume(ctx, tx, raw) })
+	}
+	if _, err = apply(); err == nil {
+		t.Fatal("early event acknowledged")
+	}
+	if read(t, s, a.ID).Status != "RESERVED" {
+		t.Fatal("unknown pair released")
+	}
+	s.AfterGame = nil
+	if _, err = s.Resume(ctx, pair); err != nil {
+		t.Fatal(err)
+	}
+	if first, err := apply(); err != nil || !first {
+		t.Fatal("return did not retry", err)
+	}
+	if read(t, s, a.ID).Status != "AVAILABLE" {
+		t.Fatal("return lost")
+	}
+	if first, err := apply(); err != nil || first {
+		t.Fatal("inbox duplicate", err)
 	}
 }

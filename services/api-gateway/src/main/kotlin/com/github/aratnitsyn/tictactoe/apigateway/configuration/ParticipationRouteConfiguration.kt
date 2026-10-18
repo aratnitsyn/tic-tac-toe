@@ -19,7 +19,7 @@ class ParticipationRouteConfiguration(
             .routes()
             .route("participation") {
                 it
-                    .path("/api/v1/participation")
+                    .path("/api/v1/participation", "/api/v1/matches/*", "/api/v1/matches/*/ready")
                     .filters { filters ->
                         filters
                             .removeRequestHeader("Authorization")

@@ -3,7 +3,8 @@
 Учебная микросервисная PvP-платформа. Требования и архитектура находятся в
 `openspec/changes/pvp-platform-v1/`. Реализованы Auth API, защищённый Gateway,
 минимальный событийный User, реестр участия Game, Lobby с приватными кодами и FIFO Matchmaking.
-Сквозной logout и игровая логика ещё не реализованы; Realtime пока scaffold; возврат в очередь после отмены подготовки ожидает этап 7. Локальные PostgreSQL/Redis/NATS
+Реализована [подготовка матча](docs/runbooks/preparation.md): готовность, отсчёт, старт и отмена с возвратом.
+Сквозной logout, ходы и завершение партии ещё не реализованы; Realtime пока scaffold. Локальные PostgreSQL/Redis/NATS
 доступны через infra/local/compose.yml. Запуск и ограничения Auth:
 [docs/runbooks/auth.md](docs/runbooks/auth.md).
 
@@ -84,6 +85,6 @@ Game: реестр участия, CAS и восстановление опер�
 Проверка рестарта Game: `python3 scripts/check-participation-runtime.py` после сборки Auth/Gateway/Game и миграций.
 
 Lobby: [API и восстановление комнат](docs/runbooks/lobby.md). Проверка: `python3 scripts/check-lobby-runtime.py`.
-Возврат после отмены подготовки (5.4) ожидает этап 7.
+Возврат после отмены подготовки и ротация кода реализованы; см. [подготовку](docs/runbooks/preparation.md).
 
 Matchmaking: [FIFO, восстановление и benchmark](docs/runbooks/matchmaking.md). Проверка: `python3 scripts/check-matchmaking-runtime.py`.

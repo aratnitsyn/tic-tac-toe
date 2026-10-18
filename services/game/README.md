@@ -1,8 +1,9 @@
 # game
 
 Kotlin/Spring Boot сервис реестра участия: CAS, регистрации комнат, атомарные пары
-WAITING_READY, durable coordination/reconciliation и outbox. Правила партии,
-таймеры подготовки и logout ещё не реализованы; см. [runbook](../../docs/runbooks/participation.md).
+WAITING_READY, durable coordination/reconciliation и outbox. Реализованы готовность,
+отсчёт, однократный старт и отмена/возврат; см. [подготовку](../../docs/runbooks/preparation.md).
+Ходы, завершение партии, пауза и logout ещё не реализованы.
 
 Требуется JDK 25 для сборки и запуска; Spring Boot 3.5.16, Kotlin 2.3.21, JVM target 25.
 Spring Boot обновляется до последнего стабильного patch только в ветке 3.5.x, с точным закреплением версии.

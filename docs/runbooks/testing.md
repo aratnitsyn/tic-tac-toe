@@ -25,6 +25,7 @@ services/api-gateway/gradlew -p services/api-gateway clean build --no-daemon
 python3 scripts/check-auth-runtime.py
 python3 scripts/check-participation-runtime.py
 python3 scripts/check-lobby-runtime.py
+python3 scripts/check-preparation-runtime.py
 ```
 
 Стек PostgreSQL/Redis/NATS должен быть запущен по [local.md](local.md).
@@ -89,8 +90,8 @@ Kotlin и Go integration fixtures используют отдельные вре
 Проверка Lobby запускает четыре реальных сервиса, проверяет конкурентные join/leave,
 восстанавливает создание после потери ответа Game и рестарта Lobby, сохраняет код/слот
 при replay, проверяет доступ и лимит кода. Создаёт пять локальных аккаунтов и до двух
-WAITING_READY матчей. Пункт 5.4 проверен только на уровне подготовленного обработчика;
-сквозная отмена/возврат ждёт этап 7. Подробности — [lobby.md](lobby.md).
+матчей. Сквозная отмена/возврат и ротация кода дополнительно проверяются
+check-preparation-runtime.py. Подробности — [lobby.md](lobby.md).
 
 ## FIFO Matchmaking
 
@@ -106,3 +107,13 @@ Matchmaking и bootstrap streams. Smoke создаёт четыре аккаун
 потерянный AssignPair response, restart/replay и cancel без освобождения IN_MATCH.
 Подготовленные return/generation тесты не заменяют интеграцию этапов 7/10; 6.5 открыт.
 Подробности и измерения — matchmaking.md и ../performance/matchmaking-local.md.
+
+## Подготовка матча
+
+`check-preparation-runtime.py` проверяет реальные Auth/Gateway/Game/Lobby/Matchmaking:
+общий ready deadline, идемпотентный ready, возврат в очередь через JetStream,
+ротацию кода лобби, отзыв возврата при втором close и рестарт Game на COUNTDOWN.
+Создаёт шесть локальных аккаунтов; оставляет тестовые данные и одну начатую партию.
+Точные границы времени, полная матрица готовности, гонка close/start, rollback
+создания партии и 48 модельных последовательностей проверяются в Game с реальным
+PostgreSQL и управляемым временем. Это не проверка WSS или игровых ходов.

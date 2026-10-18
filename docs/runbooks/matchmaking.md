@@ -2,9 +2,9 @@
 
 Реализованы вход, собственный snapshot ticket, отмена поиска, строгий FIFO-выбор пары,
 передача в Game и восстановление неизвестных исходов. Готовность и отмена подготовки
-матча остаются этапом 7; WAITING_READY пока не завершается по таймеру автоматически.
-Возврат и connection-generation адаптер подготовлены и проверены отдельно, но пункт
-6.5 остаётся открытым до интеграции с Game/Realtime. Нагрузка 100 000 не подтверждена.
+матча реализованы в Game; см. [подготовку](preparation.md).
+Возврат после отмены подключён к Game; адаптер доступности соединений ожидает Realtime.
+Пункт 6.5 остаётся открытым до этапа 10. Нагрузка 100 000 не подтверждена.
 
 ## Локальный запуск
 
@@ -95,20 +95,23 @@ python3 scripts/reconcile-matchmaking.py <operation-uuid>
 outbox, но не откатывает принятую команду; после восстановления publisher продолжает с
 publish ack и eventId. Parking/replay событий описаны в events.md.
 
-## Подготовленный возврат (6.5)
+## Возврат и доступность (6.5)
 
 Service.Return применяется в транзакции inbox. Он сверяет ticket/user/originalSequence,
 версию и текущий ресурс Game, принимает только CONSUMED, при ещё RESERVED требует retry,
 не трогает более новое участие и сохраняет исходный приоритет. Уже зарезервированные
-пары не вытесняются. Availability хранит connected и generation: отключённый ticket
-не выбирается, устаревшее поколение не отменяет reconnect.
+пары не вытесняются.
 
-Эти адаптеры пока не подключены к производящим ReturnToQueue/connection событиям:
-Game отмену подготовки и Realtime connection lifecycle ещё предстоит реализовать.
-Нельзя считать отключения и возврат после реальной отмены готовыми. Этап 7 должен
-добавить consumer с inbox/ack/parking, проверить ранний возврат до CONSUMED, повторную
-отмену при втором отключении и гонки возврата с новым назначением. Это согласованная
-граница этапа 6, а не изменение правил продукта.
+Работают durable consumers matchmaking-ReturnToQueue-v1 и
+matchmaking-ParticipationChanged-v1 с explicit ack, inbox, retry и parking.
+Первый обрабатывает реальную отмену подготовки Game; второй убирает устаревший ticket
+после MENU/отзыва возврата. Lookup Game выполняется до захвата queue_control.
+Повторная отмена старого матча не отменяет новый ticket/участие.
+
+Availability хранит connected и generation: отключённый ticket не выбирается,
+устаревшее поколение не отменяет reconnect. Этот адаптер ещё ожидает источник событий
+Realtime. По новому согласованию 6.5 остаётся открытым до этапа 10, хотя возврат
+после отмены подготовки реализован. Проверки: [preparation.md](preparation.md).
 
 ## Проверки
 
@@ -127,7 +130,7 @@ JAVA_HOME="$(/usr/libexec/java_home -v 25)" python3 scripts/check-matchmaking-ru
 
 PostgreSQL-тесты используют отдельные удаляемые схемы и race detector: параллельный
 admission, конкурентные selectors, locked head, crash до/после Game, PENDING, оба порядка
-и реальная конкурентная гонка cancel/assign, generation и подготовленный возврат/inbox.
+и реальная конкурентная гонка cancel/assign, generation, возврат/inbox и ранний возврат до CONSUMED.
 Benchmark использует 400 tickets, 4 selectors и 200 reservations в отдельной схеме;
 измеряет throughput, latency с ожиданием блокировок и samples ожидающих queue_control.
 Game/HTTP и полный пользовательский поток в этот microbenchmark не входят. Результат —

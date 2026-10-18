@@ -19,6 +19,14 @@ class GameErrorHandler(
     ): Mono<Void> {
         if (exchange.response.isCommitted) return Mono.error(error)
         return when (error) {
+            is com.github.aratnitsyn.tictactoe.game.persistence.IdempotencyConflict ->
+                ResponseUtil.error(
+                    exchange,
+                    mapper,
+                    org.springframework.http.HttpStatus.CONFLICT
+                        .value(),
+                    "IDEMPOTENCY_CONFLICT",
+                )
             is CoordinationFailure -> ResponseUtil.error(exchange, mapper, error.status, error.code)
             is org.springframework.web.server.ServerWebInputException, is IllegalArgumentException,
             is com.fasterxml.jackson.core.JsonProcessingException,

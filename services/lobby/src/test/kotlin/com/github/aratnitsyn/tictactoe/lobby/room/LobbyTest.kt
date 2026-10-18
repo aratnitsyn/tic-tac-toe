@@ -181,6 +181,8 @@ class LobbyTest {
         val oldCode = created.body["data"]["code"].asText()
         val match = UUID.randomUUID()
         db.transaction { db.update(it, "UPDATE room SET status='PREPARING',match_id=? WHERE room_id=?", match, room) }
+        var currentState = "LOBBY"
+        var currentVersion = 3
         val returning =
             object : GameClient {
                 override fun resolve(operation: RoomOperation): JsonNode = error("not used")
@@ -189,7 +191,11 @@ class LobbyTest {
                     mapper.createObjectNode().apply {
                         set<JsonNode>(
                             "data",
-                            mapper.createObjectNode().put("state", "LOBBY").put("resourceId", room.toString()),
+                            mapper
+                                .createObjectNode()
+                                .put("state", currentState)
+                                .put("version", currentVersion)
+                                .put("resourceId", room.toString()),
                         )
                     }
             }
@@ -220,5 +226,58 @@ class LobbyTest {
         event.put("eventId", UUID.randomUUID().toString())
         db.transaction { handler.apply(it, mapper.writeValueAsBytes(event)) }
         assertEquals(restored["data"], service.snapshot(owner, room)["data"])
+        currentState = "MENU"
+        currentVersion = 4
+        event.put("eventId", UUID.randomUUID().toString()).put("aggregateVersion", 2)
+        db.transaction { handler.apply(it, mapper.writeValueAsBytes(event)) }
+        assertEquals("CLOSED", service.snapshot(owner, room)["data"]["status"].asText())
+        val newer = UUID.randomUUID()
+        db.transaction {
+            db.update(
+                it,
+                "UPDATE room SET status='PREPARING',match_id=?,source_version=-1 WHERE room_id=?",
+                newer,
+                room,
+            )
+        }
+        event.put("eventId", UUID.randomUUID().toString()).put("aggregateVersion", 9)
+        db.transaction { handler.apply(it, mapper.writeValueAsBytes(event)) }
+        assertEquals("PREPARING", service.snapshot(owner, room)["data"]["status"].asText())
+    }
+
+    @Test fun `early cancellation rolls back inbox while join result is pending`() {
+        val owner = UUID.randomUUID()
+        val created = service.execute(command(user = owner))
+        val room = UUID.fromString(created.body["data"]["lobbyId"].asText())
+        store.begin(
+            command(
+                "JOIN",
+                payload =
+                    mapper
+                        .createObjectNode()
+                        .put("expectedVersion", 0)
+                        .put("code", created.body["data"]["code"].asText()),
+            ),
+        )
+        val event =
+            mapper.createObjectNode().apply {
+                put("type", "MatchCancelled")
+                put("aggregateVersion", 1)
+                putObject("payload")
+                    .put("source", "LOBBY")
+                    .put("sourceRef", room.toString())
+                    .put("matchId", UUID.randomUUID().toString())
+            }
+        val inbox = Inbox(database.source)
+        val id = UUID.randomUUID()
+        assertEquals(
+            503,
+            assertThrows(LobbyFailure::class.java) {
+                inbox.process("early-return-test", id) {
+                    LobbyReturnHandler(db, store, game).apply(it, mapper.writeValueAsBytes(event))
+                }
+            }.status,
+        )
+        assertTrue(inbox.process("early-return-test", id) { })
     }
 }

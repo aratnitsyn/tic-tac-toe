@@ -102,7 +102,9 @@ class LobbyService(
                 )
                 db.update(
                     connection,
-                    "UPDATE room SET status='PREPARING',match_id=?,source_version=-1,version=version+1 WHERE room_id=?",
+                    "UPDATE room SET " +
+                        "status='PREPARING',match_id=?,source_version=-1,return_match_id=NULL," +
+                        "return_participation_version=NULL,version=version+1 WHERE room_id=?",
                     UUID.fromString(result["resourceId"].asText()),
                     op.roomId,
                 )

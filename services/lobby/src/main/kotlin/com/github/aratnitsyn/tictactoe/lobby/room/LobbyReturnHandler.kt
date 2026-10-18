@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import java.sql.Connection
 import java.util.UUID
 
-// Stage 7 must supply the real cancellation and restored authoritative Game room registration.
+// Inbox and room changes commit together; Game remains authoritative for membership.
 class LobbyReturnHandler(
     private val db: LobbyDatabase,
     private val store: RoomStore,
@@ -19,22 +19,43 @@ class LobbyReturnHandler(
         if (event.path("type").asText() != "MatchCancelled" || payload.path("source").asText() != "LOBBY") return
         val room = UUID.fromString(payload["sourceRef"].asText())
         val match = UUID.fromString(payload["matchId"].asText())
-        val returned =
-            payload["participants"].map { UUID.fromString(it["userId"].asText()) }.filter { user ->
-                val state = game.participation(user)["data"]
-                state["state"].asText() == "LOBBY" && state.path("resourceId").asText() == room.toString()
-            }
-        check(returned.size <= 1) { "Cancellation cannot return two players to an inviting room" }
-        db.lock(connection, "room/$room")
-        val current =
-            connection.prepareStatement("SELECT match_id,source_version FROM room WHERE room_id=? FOR UPDATE").use {
-                it.setObject(1, room)
-                it.executeQuery().use { row ->
-                    row.next() && row.getObject("match_id", UUID::class.java) == match &&
-                        row.getLong("source_version") < event["aggregateVersion"].asLong()
+        val fence = RoomReturnStore(db).lock(connection, room, match, event["aggregateVersion"].asLong())
+        if (fence != null) {
+            val actual =
+                payload["participants"]
+                    .map { UUID.fromString(it["userId"].asText()) }
+                    .associateWith { game.participation(it)["data"] }
+            val present =
+                actual.filterValues {
+                    it["state"].asText() == "LOBBY" &&
+                        it.path("resourceId").asText() == room.toString()
                 }
+            val advanced =
+                fence.continuing &&
+                    present.values.any {
+                        it["version"].asLong() != fence.participationVersion
+                    }
+            if (!advanced) {
+                check(present.size <= 1) { "Cancellation cannot return two players to an inviting room" }
+                restore(connection, event, present)
+                RoomEvent(db).emit(
+                    connection,
+                    room,
+                    store.snapshot(connection, room),
+                    UUID.fromString(event["correlationId"].asText()),
+                    UUID.fromString(event["eventId"].asText()),
+                )
             }
-        if (!current) return
+        }
+    }
+
+    private fun restore(
+        connection: Connection,
+        event: JsonNode,
+        returned: Map<UUID, JsonNode>,
+    ) {
+        val payload = event["payload"]
+        val room = UUID.fromString(payload["sourceRef"].asText())
         if (returned.isEmpty()) {
             db.update(
                 connection,
@@ -43,24 +64,20 @@ class LobbyReturnHandler(
                 room,
             )
         } else {
+            val user = returned.keys.single()
             store.rotate(connection, room)
             db.update(connection, "DELETE FROM room_member WHERE room_id=?", room)
-            db.update(connection, "INSERT INTO room_member(room_id,user_id) VALUES (?,?)", room, returned.single())
+            db.update(connection, "INSERT INTO room_member(room_id,user_id) VALUES (?,?)", room, user)
             db.update(
                 connection,
-                "UPDATE room SET " +
-                    "owner_id=?,status='WAITING',match_id=NULL,source_version=?,version=version+1 WHERE room_id=?",
-                returned.single(),
+                "UPDATE room SET owner_id=?,status='WAITING',match_id=NULL,source_version=?,return_match_id=?," +
+                    "return_participation_version=?,version=version+1 WHERE room_id=?",
+                user,
                 event["aggregateVersion"].asLong(),
+                UUID.fromString(payload["matchId"].asText()),
+                returned.getValue(user)["version"].asLong(),
                 room,
             )
         }
-        RoomEvent(db).emit(
-            connection,
-            room,
-            store.snapshot(connection, room),
-            UUID.fromString(event["correlationId"].asText()),
-            UUID.fromString(event["eventId"].asText()),
-        )
     }
 }

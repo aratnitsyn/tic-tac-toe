@@ -42,6 +42,11 @@ func main() {
 	if err != nil {
 		panic("JetStream unavailable")
 	}
+	subscriptions, deliveries, err := service.Subscribe(js)
+	if err != nil {
+		panic("queue consumers unavailable")
+	}
+
 	publisher := outbox.Worker{DB: pool, Publisher: outbox.JetStreamPublisher{JS: js}, Owner: queue.UUID()}
 	delay, err := strconv.Atoi(required("MATCHMAKING_RETRY_MS"))
 	if err != nil || delay < 1 {
@@ -89,6 +94,28 @@ func main() {
 			}
 		}
 	}()
+	for index, subscription := range subscriptions {
+		go func() {
+			for ctx.Err() == nil {
+				messages, fetchErr := subscription.Fetch(16, nats.MaxWait(time.Second))
+				if fetchErr != nil && !errors.Is(fetchErr, nats.ErrTimeout) {
+					slog.Warn("queue event fetch failed")
+					select {
+					case <-ctx.Done():
+						return
+					case <-time.After(250 * time.Millisecond):
+					}
+					continue
+				}
+				for _, msg := range messages {
+					if err := deliveries[index].Handle(ctx, msg); err != nil {
+						slog.Warn("queue event delivery pending")
+					}
+				}
+			}
+		}()
+	}
+
 	failures := make(chan error, 1)
 	go func() { failures <- server.ListenAndServe() }()
 	select {

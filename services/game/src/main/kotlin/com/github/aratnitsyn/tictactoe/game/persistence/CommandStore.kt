@@ -42,6 +42,7 @@ class CommandStore(
         return dataSource.connection.use { connection ->
             connection.autoCommit = false
             try {
+                connection.createStatement().use { it.execute("SET LOCAL lock_timeout = '3s'") }
                 lock(connection, "$userId/$operationType/$commandId")
                 val existing = read(connection, key, payloadHash)
                 val response =

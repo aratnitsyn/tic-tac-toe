@@ -174,6 +174,39 @@ class GatewaySecurityTest {
     }
 
     @Test
+    fun `match ready and snapshot forward trusted identity and reject guests`() {
+        val path = "/api/v1/matches/" + java.util.UUID.randomUUID()
+        client
+            .get()
+            .uri(path)
+            .exchange()
+            .expectStatus()
+            .isUnauthorized
+        client
+            .post()
+            .uri("$path/ready")
+            .header("X-Client-Type", "NATIVE")
+            .bodyValue(mapOf("expectedVersion" to 0))
+            .exchange()
+            .expectStatus()
+            .isUnauthorized
+        client
+            .post()
+            .uri("$path/ready")
+            .header("Authorization", "Bearer valid")
+            .header("X-Client-Type", "NATIVE")
+            .header("X-User-Id", "spoofed")
+            .header("X-Service-Token", "spoofed")
+            .bodyValue(mapOf("expectedVersion" to 0))
+            .exchange()
+            .expectStatus()
+            .isOk
+        assertEquals(USER_ID, seenUser.get())
+        assertEquals(SESSION_ID, seenSession.get())
+        assertEquals(GAME_TOKEN, seenServiceToken.get())
+    }
+
+    @Test
     fun `lobby forwards authenticated identity credential and peer IP without client spoofing`() {
         client
             .post()
