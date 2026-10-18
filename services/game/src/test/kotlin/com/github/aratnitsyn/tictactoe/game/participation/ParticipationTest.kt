@@ -76,6 +76,7 @@ class ParticipationTest {
         val stale = ClaimParticipation(UUID.randomUUID(), user, 0, ParticipationState.MENU)
         assertEquals("VERSION_CONFLICT", assertThrows(CoordinationFailure::class.java) { execute("CLAIM", stale) }.code)
         assertEquals("REJECTED", service.result(stale.operationId)["status"].asText())
+        assertEquals("VERSION_CONFLICT", service.result(stale.operationId)["errorCode"].asText())
         execute("CLAIM", ClaimParticipation(UUID.randomUUID(), user, 1, ParticipationState.MENU))
         assertEquals(first, execute("CLAIM", request))
         assertEquals("MENU", state(user)["state"].asText())

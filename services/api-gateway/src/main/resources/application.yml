@@ -19,3 +19,5 @@ gateway:
   web-origin: ${WEB_ORIGIN}
   game-url: ${GAME_URL}
   game-service-token: ${GAME_SERVICE_TOKEN}
+  lobby-url: ${LOBBY_URL}
+  lobby-service-token: ${LOBBY_SERVICE_TOKEN}

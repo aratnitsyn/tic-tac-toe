@@ -47,7 +47,7 @@ class LocalEnvironmentTest(unittest.TestCase):
         infra.mkdir(parents=True)
         (infra / ".env").write_text("AUTH_DB_PASSWORD=generated\nNATS_PASSWORD=nats\nREDIS_PASSWORD=redis\n")
         with patch.object(runner, "ROOT", self.root), patch.object(
-            runner, "local_credentials", return_value=({"auth": "auth-key", "game": "game-key"}, Path("key-file"))
+            runner, "local_credentials", return_value=({"auth": "auth-key", "game": "game-key", "lobby": "lobby-key"}, Path("key-file"))
         ), patch.dict(os.environ, {"PORT": "19001", "AUTH_SERVICE_TOKEN": "override"}, clear=True):
             env = runner.environment("auth")
         self.assertEqual("19001", env["PORT"])
@@ -55,12 +55,43 @@ class LocalEnvironmentTest(unittest.TestCase):
         self.assertEqual("generated", env["PGPASSWORD"])
         self.assertEqual("auth", env["PGUSER"])
 
-    def test_scaffold_does_not_require_infrastructure_files(self):
+    def test_lobby_uses_its_database_and_service_credential(self):
         service = self.root / "services/lobby"
         service.mkdir(parents=True)
-        (service / "local.env").write_text("PORT=8083\n")
+        (service / "local.env").write_text("PORT=8083\nPGUSER=lobby\n")
+        infra = self.root / "infra/local"
+        infra.mkdir(parents=True)
+        (infra / ".env").write_text("LOBBY_DB_PASSWORD=lobby-password\nNATS_PASSWORD=nats\n")
+        with patch.object(runner, "ROOT", self.root), patch.object(
+            runner, "local_credentials", return_value=({"auth": "a", "game": "g", "lobby": "l"}, Path("key-file"))
+        ), patch.dict(os.environ, {}, clear=True):
+            env = runner.environment("lobby")
+        self.assertEqual("lobby-password", env["PGPASSWORD"])
+        self.assertEqual("l", env["LOBBY_SERVICE_TOKEN"])
+        self.assertEqual("g", env["GAME_SERVICE_TOKEN"])
+
+    def test_local_credentials_upgrade_preserves_existing_service_tokens(self):
+        import json
+        directory = self.root / "infra/local/secrets"
+        directory.mkdir(parents=True)
+        credentials = directory / "services.json"
+        credentials.write_text(json.dumps({"auth": "existing-auth", "game": "existing-game"}))
+        (directory / "login-keys.properties").write_text("existing-key")
+        with patch.object(runner, "ROOT", self.root):
+            first, _ = runner.local_credentials()
+            second, _ = runner.local_credentials()
+        self.assertEqual(first, second)
+        self.assertEqual("existing-auth", first["auth"])
+        self.assertEqual("existing-game", first["game"])
+        self.assertGreaterEqual(len(first["lobby"]), 32)
+        self.assertEqual("existing-key", (directory / "login-keys.properties").read_text())
+
+    def test_go_scaffold_does_not_require_infrastructure_files(self):
+        service = self.root / "services/realtime"
+        service.mkdir(parents=True)
+        (service / "local.env").write_text("PORT=8086\n")
         with patch.object(runner, "ROOT", self.root), patch.dict(os.environ, {}, clear=True):
-            self.assertEqual({"PORT": "8083"}, runner.environment("lobby"))
+            self.assertEqual({"PORT": "8086"}, runner.environment("realtime"))
 
     def test_missing_service_file_fails_instead_of_silently_using_defaults(self):
         with patch.object(runner, "ROOT", self.root):

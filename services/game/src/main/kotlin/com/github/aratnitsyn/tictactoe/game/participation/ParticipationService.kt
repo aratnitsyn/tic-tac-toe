@@ -58,7 +58,9 @@ class ParticipationService(
                         .value(),
                 )
             if (rejectAsError && op.errorCode != null) throw CoordinationFailure(op.errorCode)
-            op.result ?: db.mapper
+            op.result?.deepCopy<com.fasterxml.jackson.databind.node.ObjectNode>()?.apply {
+                op.errorCode?.let { put("errorCode", it) }
+            } ?: db.mapper
                 .createObjectNode()
                 .put("operationId", id.toString())
                 .put("status", "PENDING")

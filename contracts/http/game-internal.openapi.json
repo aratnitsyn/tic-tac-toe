@@ -656,6 +656,10 @@
             "type": "integer",
             "minimum": 0,
             "description": "Participation version for a claim/registration; match version for pair formation; 0 for PENDING. Historical result, not a current snapshot."
+          },
+          "errorCode": {
+            "type": "string",
+            "description": "Stable rejection code when status is REJECTED; absent for PENDING/APPLIED."
           }
         },
         "required": [

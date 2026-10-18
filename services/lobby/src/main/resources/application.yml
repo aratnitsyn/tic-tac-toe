@@ -1,4 +1,8 @@
 spring:
+  datasource:
+    url: ${PG_JDBC_URL}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
   application:
     name: lobby
 server:
@@ -13,3 +17,14 @@ management:
     health:
       probes:
         enabled: true
+events:
+  url: ${NATS_URL}
+  user: ${NATS_USER}
+  password: ${NATS_PASSWORD}
+lobby:
+  service-token: ${LOBBY_SERVICE_TOKEN}
+  game-url: ${GAME_URL}
+  game-service-token: ${GAME_SERVICE_TOKEN}
+  retry-ms: ${LOBBY_RETRY_MS}
+  code-user-limit: ${LOBBY_CODE_USER_LIMIT}
+  code-ip-limit: ${LOBBY_CODE_IP_LIMIT}

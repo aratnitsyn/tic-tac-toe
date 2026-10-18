@@ -1,9 +1,9 @@
 # tic-tac-toe
 
 Учебная микросервисная PvP-платформа. Требования и архитектура находятся в
-`openspec/changes/pvp-platform-v1/`. Реализованы Auth API, защищённый Gateway
-и минимальный событийный User. Сквозной logout ожидает реализацию Game;
-остальные игровые сервисы пока scaffold. Локальные PostgreSQL/Redis/NATS
+`openspec/changes/pvp-platform-v1/`. Реализованы Auth API, защищённый Gateway,
+минимальный событийный User, реестр участия Game и Lobby с приватными кодами.
+Сквозной logout и игровая логика ещё не реализованы; Matchmaking/Realtime пока scaffold. Локальные PostgreSQL/Redis/NATS
 доступны через infra/local/compose.yml. Запуск и ограничения Auth:
 [docs/runbooks/auth.md](docs/runbooks/auth.md).
 
@@ -82,3 +82,6 @@ python3 -m unittest discover -s scripts/tests -v
 
 Game: реестр участия, CAS и восстановление операций описаны в [runbook участия](docs/runbooks/participation.md).
 Проверка рестарта Game: `python3 scripts/check-participation-runtime.py` после сборки Auth/Gateway/Game и миграций.
+
+Lobby: [API и восстановление комнат](docs/runbooks/lobby.md). Проверка: `python3 scripts/check-lobby-runtime.py`.
+Возврат после отмены подготовки (5.4) ожидает этап 7.

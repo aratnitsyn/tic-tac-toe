@@ -24,6 +24,7 @@ python3 scripts/check-command-stores.py
 services/api-gateway/gradlew -p services/api-gateway clean build --no-daemon
 python3 scripts/check-auth-runtime.py
 python3 scripts/check-participation-runtime.py
+python3 scripts/check-lobby-runtime.py
 ```
 
 Стек PostgreSQL/Redis/NATS должен быть запущен по [local.md](local.md).
@@ -84,3 +85,9 @@ Kotlin и Go integration fixtures используют отдельные вре
 Проверка участия запускает Auth/Gateway/Game, восстанавливает PENDING после
 рестарта Game и проверяет snapshots/повторы/корреляцию; создаёт два локальных
 аккаунта и один WAITING_READY матч. Подробности — [participation.md](participation.md).
+
+Проверка Lobby запускает четыре реальных сервиса, проверяет конкурентные join/leave,
+восстанавливает создание после потери ответа Game и рестарта Lobby, сохраняет код/слот
+при replay, проверяет доступ и лимит кода. Создаёт пять локальных аккаунтов и до двух
+WAITING_READY матчей. Пункт 5.4 проверен только на уровне подготовленного обработчика;
+сквозная отмена/возврат ждёт этап 7. Подробности — [lobby.md](lobby.md).

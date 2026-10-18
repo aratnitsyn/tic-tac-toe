@@ -1012,7 +1012,7 @@
             }
           }
         },
-        "description": "expectedVersion refers to participation. Deadline is exclusive and checked using server time.",
+        "description": "expectedVersion refers to Game participation. On 503 the outcome may be unknown: retry the identical command with the same Idempotency-Key. JOIN immediately forms WAITING_READY atomically in Game; LEAVE cannot release IN_MATCH.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1134,7 +1134,7 @@
             }
           }
         },
-        "description": "expectedVersion refers to participation. Deadline is exclusive and checked using server time.",
+        "description": "expectedVersion refers to Game participation. On 503 the outcome may be unknown: retry the identical command with the same Idempotency-Key. JOIN immediately forms WAITING_READY atomically in Game; LEAVE cannot release IN_MATCH.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1253,7 +1253,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Only the room member can read it. REGISTERING is internal and returns 503 until Game confirms registration."
       }
     },
     "/lobbies/{lobbyId}/leave": {
@@ -1374,7 +1375,7 @@
             }
           }
         },
-        "description": "expectedVersion refers to participation. Deadline is exclusive and checked using server time.",
+        "description": "expectedVersion refers to Game participation. On 503 the outcome may be unknown: retry the identical command with the same Idempotency-Key. JOIN immediately forms WAITING_READY atomically in Game; LEAVE cannot release IN_MATCH.",
         "requestBody": {
           "required": true,
           "content": {

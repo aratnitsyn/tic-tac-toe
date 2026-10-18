@@ -173,11 +173,40 @@ class GatewaySecurityTest {
         assertEquals(GAME_TOKEN, seenServiceToken.get())
     }
 
+    @Test
+    fun `lobby forwards authenticated identity credential and peer IP without client spoofing`() {
+        client
+            .post()
+            .uri("/api/v1/lobbies/join")
+            .header("Authorization", "Bearer valid")
+            .header("X-Client-Type", "NATIVE")
+            .header("X-User-Id", "spoofed")
+            .header("X-Session-Id", "spoofed")
+            .header("X-Service-Token", "spoofed")
+            .header("X-Client-IP", "spoofed")
+            .bodyValue(mapOf("expectedVersion" to 0, "code" to "AAAAAAAAAA"))
+            .exchange()
+            .expectStatus()
+            .isOk
+        assertEquals(USER_ID, seenUser.get())
+        assertEquals(SESSION_ID, seenSession.get())
+        assertEquals(LOBBY_TOKEN, seenServiceToken.get())
+        assertEquals("127.0.0.1", seenClientIp.get())
+        client
+            .get()
+            .uri("/internal/v1/operations/" + UUID.randomUUID())
+            .header("Authorization", "Bearer valid")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+    }
+
     companion object {
         private const val ORIGIN = "https://game.example.com"
         private val USER_ID = UUID.randomUUID().toString()
         private val SESSION_ID = UUID.randomUUID().toString()
         private val GAME_TOKEN = UUID.randomUUID().toString()
+        private val LOBBY_TOKEN = UUID.randomUUID().toString()
         private val SERVICE_TOKEN = UUID.randomUUID().toString()
         private val mapper = jacksonObjectMapper()
         private val seenServiceToken = AtomicReference<String>()
@@ -241,6 +270,8 @@ class GatewaySecurityTest {
             registry.add("gateway.web-origin") { ORIGIN }
             registry.add("gateway.game-url") { "http://127.0.0.1:${server.address.port}" }
             registry.add("gateway.game-service-token") { GAME_TOKEN }
+            registry.add("gateway.lobby-url") { "http://127.0.0.1:${server.address.port}" }
+            registry.add("gateway.lobby-service-token") { LOBBY_TOKEN }
         }
 
         @JvmStatic
