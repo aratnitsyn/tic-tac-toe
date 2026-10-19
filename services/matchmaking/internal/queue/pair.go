@@ -13,7 +13,7 @@ import (
 func (s *Service) Select(ctx context.Context) (string, error) {
 	id := ""
 	err := s.transaction(ctx, func(tx pgx.Tx) error {
-		rows, err := tx.Query(ctx, "SELECT ticket_id FROM queue_ticket WHERE status='AVAILABLE' AND connected ORDER BY original_sequence,admission_sequence LIMIT 2 FOR UPDATE")
+		rows, err := tx.Query(ctx, "SELECT ticket_id FROM queue_ticket WHERE status='AVAILABLE' AND connected AND availability_until>clock_timestamp() ORDER BY original_sequence,admission_sequence LIMIT 2 FOR UPDATE")
 		if err != nil {
 			return err
 		}

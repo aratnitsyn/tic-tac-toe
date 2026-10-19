@@ -52,3 +52,11 @@ ack кадра не обещает exactly-once доставку. Повтор e
 применяется второй раз; запоздалое событие не откатывает состояние. Таймеры рисуются
 по serverTime/deadline; равенство сроку уже означает опоздание. Символы и поле —
 в Game snapshot; отсутствующий result означает незавершённую партию.
+
+Realtime использует `resync_required` после успешной подписки как барьер: HTTP
+snapshot читается после этого frame. `sessions/touch` — внутренний Auth endpoint
+для проверки userId/sessionId без передачи session token. `connections/renew`
+возвращает только подтверждённые записи. Внутренний Matchmaking
+`POST /internal/v1/availability` (X-Service-Token) принимает ровно
+`userId: UUID`, `generation: integer >= 1`, `connected: boolean` и возвращает
+`{"status":"APPLIED"}`; обновляет доступность существующего AVAILABLE ticket.

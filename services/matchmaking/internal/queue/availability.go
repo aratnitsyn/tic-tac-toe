@@ -16,3 +16,16 @@ func (s *Service) Availability(ctx context.Context, ticket string, generation in
 		return err
 	})
 }
+
+// ObserveAvailability is fed by authenticated socket heartbeats. A lost pod
+// cannot leave a ticket selectable indefinitely; expiry only suspends selection.
+func (s *Service) ObserveAvailability(ctx context.Context, user string, generation int64, connected bool) error {
+	if !validID(user) || generation < 1 {
+		return fail("VALIDATION_ERROR", 400)
+	}
+	return s.transaction(ctx, func(tx pgx.Tx) error {
+		_, err := tx.Exec(ctx, `UPDATE queue_ticket SET connected=$3,connection_generation=$2,availability_until=clock_timestamp()+interval '6 seconds'
+   WHERE user_id=$1 AND status='AVAILABLE' AND (connection_generation<$2 OR (connection_generation=$2 AND connected))`, user, generation, connected)
+		return err
+	})
+}

@@ -5,7 +5,7 @@
 минимальный событийный User, реестр участия Game, Lobby с приватными кодами и FIFO Matchmaking.
 Реализована [подготовка матча](docs/runbooks/preparation.md): готовность, отсчёт, старт и отмена с возвратом.
 Реализована [партия](docs/runbooks/play.md): ходы, результат, сдача, пауза и надёжные таймеры.
-Реализован [сквозной logout](docs/runbooks/logout.md) с восстановлением CLOSING; Realtime пока scaffold. Локальные PostgreSQL/Redis/NATS
+Реализован [сквозной logout](docs/runbooks/logout.md) с восстановлением CLOSING; Realtime реализует WS, dispatcher и синхронизацию; продуктовые клиенты ещё предстоят. Локальные PostgreSQL/Redis/NATS
 доступны через infra/local/compose.yml. Запуск и ограничения Auth:
 [docs/runbooks/auth.md](docs/runbooks/auth.md).
 
@@ -89,3 +89,8 @@ Lobby: [API и восстановление комнат](docs/runbooks/lobby.md
 Возврат после отмены подготовки и ротация кода реализованы; см. [подготовку](docs/runbooks/preparation.md).
 
 Matchmaking: [FIFO, восстановление и benchmark](docs/runbooks/matchmaking.md). Проверка: `python3 scripts/check-matchmaking-runtime.py`.
+
+Этап 10: Realtime обслуживает внутренний WS `/wss`, проверяет tickets и подписки,
+использует Redis ownership и сохраняемые Game leases, адресно доставляет NATS events.
+Тестовый клиент проверяет ack, snapshot/gap, периодическую сверку и reconnect;
+Web/iOS/Android ещё предстоят. Запуск и ограничения — [Realtime runbook](docs/runbooks/realtime.md).

@@ -3,8 +3,8 @@
 Реализованы вход, собственный snapshot ticket, отмена поиска, строгий FIFO-выбор пары,
 передача в Game и восстановление неизвестных исходов. Готовность и отмена подготовки
 матча реализованы в Game; см. [подготовку](preparation.md).
-Возврат после отмены подключён к Game; адаптер доступности соединений ожидает Realtime.
-Пункт 6.5 остаётся открытым до этапа 10. Нагрузка 100 000 не подтверждена.
+Возврат после отмены подключён к Game; доступность соединений поступает из Realtime.
+Пункт 6.5 закрывается интеграцией leases Realtime этапа 10. Нагрузка 100 000 не подтверждена.
 
 ## Локальный запуск
 
@@ -109,9 +109,9 @@ matchmaking-ParticipationChanged-v1 с explicit ack, inbox, retry и parking.
 Повторная отмена старого матча не отменяет новый ticket/участие.
 
 Availability хранит connected и generation: отключённый ticket не выбирается,
-устаревшее поколение не отменяет reconnect. Этот адаптер ещё ожидает источник событий
-Realtime. По новому согласованию 6.5 остаётся открытым до этапа 10, хотя возврат
-после отмены подготовки реализован. Проверки: [preparation.md](preparation.md).
+устаревшее поколение не отменяет reconnect. Источник — heartbeat Realtime,
+срок доступности хранится в Matchmaking. 6.5 завершён интеграцией этапа 10.
+Возвраты проверены в [preparation.md](preparation.md), leases — в [realtime.md](realtime.md).
 
 ## Проверки
 
@@ -135,3 +135,9 @@ Benchmark использует 400 tickets, 4 selectors и 200 reservations в �
 измеряет throughput, latency с ожиданием блокировок и samples ожидающих queue_control.
 Game/HTTP и полный пользовательский поток в этот microbenchmark не входят. Результат —
 в docs/performance/matchmaking-local.md, не доказательство целевой вместимости.
+
+Этап 10 подключает `/internal/v1/availability`: heartbeat Realtime продлевает
+availability_until на 6 секунд. Selector исключает просроченные записи, сохраняя
+QUEUED и originalSequence. Переподключение нового поколения восстанавливает
+доступность; поздний close старого поколения не отменяет её. Подробности и проверки —
+[realtime.md](realtime.md).

@@ -102,12 +102,24 @@ class LocalEnvironmentTest(unittest.TestCase):
         self.assertEqual("custom-dsn", env["PG_DSN"])
         self.assertEqual("m", env["MATCHMAKING_SERVICE_TOKEN"])
 
-    def test_go_scaffold_does_not_require_infrastructure_files(self):
+    def test_realtime_loads_own_database_redis_and_internal_credentials(self):
         service = self.root / "services/realtime"
         service.mkdir(parents=True)
-        (service / "local.env").write_text("PORT=8086\n")
-        with patch.object(runner, "ROOT", self.root), patch.dict(os.environ, {}, clear=True):
-            self.assertEqual({"PORT": "8086"}, runner.environment("realtime"))
+        (service / "local.env").write_text("PORT=8086\nPG_DSN=local-dsn\n")
+        infra = self.root / "infra/local"
+        infra.mkdir(parents=True)
+        (infra / ".env").write_text("REALTIME_DB_PASSWORD=socket-password\nNATS_PASSWORD=nats\nREDIS_PASSWORD=redis\n")
+        with patch.object(runner, "ROOT", self.root), patch.object(
+            runner, "local_credentials", return_value=({"auth": "a", "game": "g", "lobby": "l", "matchmaking": "m"}, Path("key"))
+        ), patch.dict(os.environ, {"PORT": "9090"}, clear=True):
+            env = runner.environment("realtime")
+        self.assertEqual("socket-password", env["PGPASSWORD"])
+        self.assertEqual("redis", env["REDIS_PASSWORD"])
+        self.assertEqual("nats", env["NATS_PASSWORD"])
+        self.assertEqual("a", env["AUTH_SERVICE_TOKEN"])
+        self.assertEqual("g", env["GAME_SERVICE_TOKEN"])
+        self.assertEqual("m", env["MATCHMAKING_SERVICE_TOKEN"])
+        self.assertEqual("9090", env["PORT"])
 
     def test_missing_service_file_fails_instead_of_silently_using_defaults(self):
         with patch.object(runner, "ROOT", self.root):

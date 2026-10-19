@@ -106,7 +106,7 @@ JAVA_HOME="$(/usr/libexec/java_home -v 25)" python3 scripts/check-matchmaking-ru
 Matchmaking и bootstrap streams. Smoke создаёт четыре аккаунта и один WAITING_READY
 матч; сохраняет тестовые записи, останавливает свои процессы. Проверяет FIFO,
 потерянный AssignPair response, restart/replay и cancel без освобождения IN_MATCH.
-Подготовленные return/generation тесты не заменяют интеграцию этапов 7/10; 6.5 открыт.
+Return/generation и доступность отключённых tickets дополнительно проверяются в Realtime этапе 10.
 Подробности и измерения — matchmaking.md и ../performance/matchmaking-local.md.
 
 ## Подготовка матча
@@ -128,3 +128,11 @@ PostgreSQL и управляемым временем. Это не провер�
 Данные остаются локально. Точные временные границы, независимые запасы, generation
 таймеров, retry после потери lease, DB row lock и гонки завершения проверяются
 в Game на PostgreSQL; правила поля — чистыми тестами. См. [play.md](play.md).
+
+## Realtime
+
+См. [realtime.md](realtime.md): изолированные PostgreSQL/Redis/NATS проверки,
+два socket pods и dispatcher, fenced disconnect и очередь, bounded buffers,
+клиентские snapshot/ack/reconcile tests, runtime SIGKILL socket и restart Game.
+Протокол синхронизации реализован тестовым Go-клиентом; продуктовые клиенты —
+этапы 11–13. Локальный smoke проверяет внутренний WS, а не будущий внешний ingress.

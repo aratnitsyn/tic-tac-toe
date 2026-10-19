@@ -2,6 +2,7 @@ package queue
 
 import (
 	"crypto/subtle"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -57,6 +58,29 @@ func (s *Service) Handler(token string) http.Handler {
 		w.WriteHeader(response.Status)
 		_, _ = w.Write(response.Body)
 	}
+	mux.HandleFunc("POST /internal/v1/availability", func(w http.ResponseWriter, r *http.Request) {
+		if subtle.ConstantTimeCompare([]byte(r.Header.Get("X-Service-Token")), []byte(token)) != 1 {
+			writeError(w, fail("UNAUTHENTICATED", 401))
+			return
+		}
+		var v struct {
+			User       string `json:"userId"`
+			Generation *int64 `json:"generation"`
+			Connected  *bool  `json:"connected"`
+		}
+		decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096))
+		decoder.DisallowUnknownFields()
+		if decoder.Decode(&v) != nil || v.Generation == nil || v.Connected == nil || decoder.Decode(new(any)) != io.EOF {
+			writeError(w, fail("VALIDATION_ERROR", 400))
+			return
+		}
+		if err := s.ObserveAvailability(r.Context(), v.User, *v.Generation, *v.Connected); err != nil {
+			writeError(w, err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"status":"APPLIED"}`))
+	})
 	mux.HandleFunc("GET /api/v1/matchmaking/queue", queue)
 	mux.HandleFunc("POST /api/v1/matchmaking/queue", queue)
 	mux.HandleFunc("POST /api/v1/matchmaking/queue/cancel", queue)

@@ -110,9 +110,12 @@ class PreparationService(
             if (applies && match.state != "FINISHED") {
                 db.update(
                     connection,
-                    "UPDATE match_member SET connected=?,connection_generation=? WHERE match_id=? AND user_id=?",
+                    "UPDATE match_member SET connected=?,connection_generation=?," +
+                        "connection_lease_until=CASE WHEN ? THEN clock_timestamp()+interval '6 seconds' " +
+                        "ELSE NULL END WHERE match_id=? AND user_id=?",
                     connected,
                     next,
+                    connected,
                     id,
                     user,
                 )

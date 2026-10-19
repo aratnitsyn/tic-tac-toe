@@ -1,17 +1,17 @@
 # realtime
 
-Независимый Go scaffold. Доменные API и WebSocket ещё не реализованы.
-Требуется Go 1.24.0. Из этого каталога:
+Go 1.24.0: внутренний WS `/wss`, ticket-аутентификация, generation/ownership,
+heartbeat и durable Game leases, адресный NATS dispatcher и тестовый клиент
+синхронизации. Внешний WSS обслуживает будущий Istio ingress.
+
+Из этого каталога:
 
 ```sh
 go build -o build/realtime .
 python3 ../../scripts/run-service.py realtime
 ```
 
-Внутренний health endpoint: `http://127.0.0.1:8086/healthz`.
-Переменная `PORT` меняет порт. Публичный TLS завершает Istio ingress.
-
-Локальный запуск через `scripts/run-service.py` читает `local.env` этого сервиса.
-Переменные текущего окружения имеют приоритет. В `local.env` хранятся только
-несекретные настройки.
-Для прямого запуска бинарного файла задайте переменные окружения самостоятельно.
+Runner читает несекретный local.env; окружение имеет приоритет. Секреты поступают
+из игнорируемых настроек локального стенда. `/healthz` — внутренний health endpoint.
+`REALTIME_ROLE=socket|dispatcher|all`; каждому socket нужен уникальный REALTIME_POD_ID.
+Запуск, протокол, ограничения и проверки: [runbook](../../docs/runbooks/realtime.md).

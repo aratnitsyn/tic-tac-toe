@@ -31,20 +31,71 @@ class AuthHttpTest {
     private val hasher = PasswordHasher()
     private val serviceToken = randomToken()
     private val key = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
+    private val sessions = SessionService(source, hasher, LoginResponseCipher("test", { key }))
     private val controller =
         AuthController(
             RegistrationService(source, hasher, mapper),
-            SessionService(source, hasher, LoginResponseCipher("test", { key })),
+            sessions,
             mapper,
         )
     private val client =
         WebTestClient
-            .bindToController(controller)
-            .controllerAdvice(AuthErrorHandler(mapper))
+            .bindToController(
+                controller,
+                com.github.aratnitsyn.tictactoe.auth.account.http.SessionCommandController(
+                    org.mockito.Mockito.mock(WsTicketService::class.java),
+                    sessions,
+                    org.mockito.Mockito.mock(LogoutService::class.java),
+                    mapper,
+                ),
+            ).controllerAdvice(AuthErrorHandler(mapper))
             .webFilter<WebTestClient.ControllerSpec>(ServiceAuthorization(serviceToken))
             .configureClient()
             .responseTimeout(Duration.ofSeconds(10))
             .build()
+
+    @Test
+    fun `identity heartbeat checks session authority and service credential`() {
+        val credentials = Credential("${UUID.randomUUID()}@example.com", "Abc1!x", ClientType.NATIVE)
+        RegistrationService(source, hasher, mapper).register(UUID.randomUUID(), credentials)
+        val identity = sessions.login(UUID.randomUUID(), credentials).identity
+        val body = mapOf("userId" to identity.userId.toString(), "sessionId" to identity.sessionId.toString())
+        client
+            .post()
+            .uri("/internal/v1/sessions/touch")
+            .bodyValue(body)
+            .exchange()
+            .expectStatus()
+            .isUnauthorized
+        client
+            .post()
+            .uri("/internal/v1/sessions/touch")
+            .header("X-Service-Token", serviceToken)
+            .bodyValue(body)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.active")
+            .isEqualTo(true)
+        source.connection.use { c ->
+            c.prepareStatement("UPDATE session_slots SET state='CLOSING' WHERE user_id=?").use {
+                it.setObject(1, identity.userId)
+                it.executeUpdate()
+            }
+        }
+        client
+            .post()
+            .uri("/internal/v1/sessions/touch")
+            .header("X-Service-Token", serviceToken)
+            .bodyValue(body)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$.active")
+            .isEqualTo(false)
+    }
 
     @Test
     fun `registration and login return contract fields and never log credentials`() {

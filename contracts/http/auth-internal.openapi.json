@@ -68,6 +68,57 @@
           }
         }
       }
+    },
+    "/sessions/touch": {
+      "post": {
+        "operationId": "touchSessionIdentity",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "sessionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "userId",
+                  "sessionId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Active session checked and inactivity extended; no token is accepted or returned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "active": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "active"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

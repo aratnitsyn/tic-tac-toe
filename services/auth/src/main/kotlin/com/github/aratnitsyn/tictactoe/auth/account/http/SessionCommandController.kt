@@ -3,6 +3,7 @@ package com.github.aratnitsyn.tictactoe.auth.account.http
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.aratnitsyn.tictactoe.auth.account.LogoutService
+import com.github.aratnitsyn.tictactoe.auth.account.SessionService
 import com.github.aratnitsyn.tictactoe.auth.account.WsTicketService
 import com.github.aratnitsyn.tictactoe.auth.util.WebFluxUtil.blocking
 import com.github.aratnitsyn.tictactoe.auth.util.WebFluxUtil.token
@@ -20,6 +21,7 @@ import java.util.UUID
 @RestController
 class SessionCommandController(
     private val tickets: WsTicketService,
+    private val sessions: SessionService,
     private val logout: LogoutService,
     private val mapper: ObjectMapper,
 ) {
@@ -62,6 +64,15 @@ class SessionCommandController(
             response
         }
 
+    @PostMapping("/internal/v1/sessions/touch")
+    fun touch(
+        @RequestBody body: SessionTouchRequest,
+    ): Mono<JsonNode> =
+        blocking {
+            val identity = sessions.touchIdentity(body.userId, body.sessionId)
+            mapper.createObjectNode().put("active", identity != null)
+        }
+
     @PostMapping("/api/v1/auth/logout")
     fun logout(
         @RequestHeader("Idempotency-Key") commandId: UUID,
@@ -95,3 +106,8 @@ class SessionCommandController(
             ResponseEntity.accepted().body(response)
         }
 }
+
+data class SessionTouchRequest(
+    val userId: UUID,
+    val sessionId: UUID,
+)

@@ -3,7 +3,7 @@
 Go 1.24.0 сервис FIFO-подбора: admission через Game, очередь с queue_control,
 резервирование пары, durable AssignPair/reconciliation, отмена и QueueChanged outbox.
 Возврат после отмены подготовки подключён через NATS/inbox к Game.
-6.5 открыт до подключения доступности соединений Realtime на этапе 10.
+Этап 10 подключает availability leases Realtime и закрывает 6.5; см. [runbook](../../docs/runbooks/realtime.md).
 
 Из этого каталога:
 

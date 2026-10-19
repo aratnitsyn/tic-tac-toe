@@ -638,3 +638,41 @@ func TestEarlyReturnRetriesInboxUntilConsumed(t *testing.T) {
 		t.Fatal("inbox duplicate", err)
 	}
 }
+
+func TestAvailabilityLeaseRetainsFIFOAndDoesNotReleaseParticipation(t *testing.T) {
+	s, g := fixture(t)
+	ctx := context.Background()
+	a := join(t, s, UUID())
+	b := join(t, s, UUID())
+	c := join(t, s, UUID())
+	if err := s.ObserveAvailability(ctx, a.User, 10, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.DB.Exec(ctx, "UPDATE queue_ticket SET availability_until=clock_timestamp()-interval '1 second' WHERE ticket_id=$1", a.ID); err != nil {
+		t.Fatal(err)
+	}
+	first, err := s.Select(ctx)
+	if err != nil || first == "" {
+		t.Fatal(err)
+	}
+	if read(t, s, b.ID).Pair != first || read(t, s, c.ID).Pair != first {
+		t.Fatal("expired head selected")
+	}
+	if p, _ := g.Participation(ctx, a.User); p.State != "QUEUED" {
+		t.Fatal("expiry released participation")
+	}
+	if err = s.ObserveAvailability(ctx, a.User, 11, true); err != nil {
+		t.Fatal(err)
+	}
+	if err = s.ObserveAvailability(ctx, a.User, 10, false); err != nil {
+		t.Fatal(err)
+	}
+	d := join(t, s, UUID())
+	second, err := s.Select(ctx)
+	if err != nil || second == "" {
+		t.Fatal(err)
+	}
+	if read(t, s, a.ID).Pair != second || read(t, s, d.ID).Pair != second || read(t, s, a.ID).Sequence != a.Sequence {
+		t.Fatal("priority or generation lost")
+	}
+}
