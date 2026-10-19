@@ -4,7 +4,7 @@ Kotlin/Spring Boot сервис реестра участия: CAS, регист
 WAITING_READY, durable coordination/reconciliation и outbox. Реализованы готовность,
 отсчёт, однократный старт и отмена/возврат; см. [подготовку](../../docs/runbooks/preparation.md).
 Реализованы ходы, результаты, сдача, пауза и надёжные таймеры;
-см. [партию](../../docs/runbooks/play.md). Интеграция logout ожидает этап 9.
+см. [партию](../../docs/runbooks/play.md). Реализован [LogoutParticipation](../../docs/runbooks/logout.md) с очисткой участия и сдачей.
 
 Требуется JDK 25 для сборки и запуска; Spring Boot 3.5.16, Kotlin 2.3.21, JVM target 25.
 Spring Boot обновляется до последнего стабильного patch только в ветке 3.5.x, с точным закреплением версии.

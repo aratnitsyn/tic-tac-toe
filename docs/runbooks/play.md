@@ -91,8 +91,7 @@ Reconnect до срока сохраняет остаток `deadline - now`. Е
 
 winnerId/loserId передаются только для WIN. FINISHED терминален.
 При гонке хода, сдачи, timeout и disconnect сериализация и server time дают один
-результат и одно событие GameFinished. LogoutParticipation/Auth CLOSING — этап 9;
-сдача уже реализована, но явный выход из аккаунта ещё не подключён к ней.
+результат и одно событие GameFinished. Явный выход из аккаунта подключён к сдаче через [LogoutParticipation/Auth CLOSING](logout.md).
 
 ## Сохраняемые задачи
 
@@ -152,4 +151,4 @@ Runtime требует собранных Auth/Game/Lobby/Gateway JAR, созд�
 откат command/game/match/participation. Отдельный тест использует реальный DB clock
 после ожидания row lock. Worker crash проверяется восстановлением lease и повтором
 задач. Чистые тесты покрывают восемь линий, выигрыш последней клеткой, ничью и первый X.
-Это не приёмка 100 000 пользователей, TLS/Istio, WSS или интеграции logout.
+Это не приёмка 100 000 пользователей, TLS/Istio или WSS. Сквозной logout проверяется отдельно — [logout.md](logout.md).

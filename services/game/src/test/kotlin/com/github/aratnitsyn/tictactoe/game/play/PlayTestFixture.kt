@@ -22,7 +22,9 @@ import java.sql.Connection
 import java.time.Instant
 import java.util.UUID
 
-class PlayTestFixture : AutoCloseable {
+class PlayTestFixture(
+    start: Boolean = true,
+) : AutoCloseable {
     private val database = GameTestDatabase()
     val mapper = jacksonObjectMapper()
     val db = CoordinationDatabase(database.source, mapper)
@@ -62,10 +64,12 @@ class PlayTestFixture : AutoCloseable {
             }
         execute("ASSIGN_PAIR", AssignPair(UUID.randomUUID(), id, players))
         now = db.transaction { matches.lock(it, id).readyDeadline.minusSeconds(10) }
-        preparation.ready(a, id, UUID.randomUUID(), body(0))
-        preparation.ready(b, id, UUID.randomUUID(), body(1))
-        now = now.plusSeconds(5)
-        preparation.tick(id)
+        if (start) {
+            preparation.ready(a, id, UUID.randomUUID(), body(0))
+            preparation.ready(b, id, UUID.randomUUID(), body(1))
+            now = now.plusSeconds(5)
+            preparation.tick(id)
+        }
     }
 
     fun game(): PlayState = db.transaction { requireNotNull(engine.store.load(it, id)) }

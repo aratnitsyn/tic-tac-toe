@@ -1,6 +1,6 @@
 # auth
 
-Auth: регистрация, session slot, интроспекция, encrypted login replay, WS tickets и сохраняемый CLOSING. Сквозной logout ожидает Game (этапы 4/9).
+Auth: регистрация, session slot, интроспекция, encrypted login replay, WS tickets и сохраняемый CLOSING. Сквозной logout подключён к Game; см. [runbook](../../docs/runbooks/logout.md).
 
 Требуется JDK 25 для сборки и запуска; Spring Boot 3.5.16, Kotlin 2.3.21, JVM target 25.
 Spring Boot обновляется до последнего стабильного patch только в ветке 3.5.x, с точным закреплением версии.

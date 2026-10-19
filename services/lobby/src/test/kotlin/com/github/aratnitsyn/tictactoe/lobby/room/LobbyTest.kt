@@ -280,4 +280,60 @@ class LobbyTest {
         )
         assertTrue(inbox.process("early-return-test", id) { })
     }
+
+    @Test
+    fun `menu cleanup retries pending create and never closes a room with current participation`() {
+        val user = UUID.randomUUID()
+        var state = "MENU"
+        var version = 2L
+        var resource = ""
+        val authority =
+            object : GameClient {
+                override fun resolve(operation: RoomOperation) = game.resolve(operation)
+
+                override fun participation(userId: UUID): JsonNode =
+                    mapper.createObjectNode().set(
+                        "data",
+                        mapper
+                            .createObjectNode()
+                            .put("state", state)
+                            .put("version", version)
+                            .put("resourceId", resource),
+                    )
+            }
+        val handler = LobbyLogoutHandler(db, store, authority)
+        val request = command(user = user)
+        val operation = store.begin(request)
+        val eventId = UUID.randomUUID()
+        val event =
+            mapper
+                .createObjectNode()
+                .put("eventId", eventId.toString())
+                .put("type", "ParticipationChanged")
+                .put("aggregateId", user.toString())
+                .put("aggregateVersion", 2)
+                .put("correlationId", UUID.randomUUID().toString())
+        event.set<JsonNode>("payload", mapper.createObjectNode().put("state", "MENU"))
+        val inbox = Inbox(database.source)
+
+        fun deliver() = inbox.process("lobby-menu-v1", eventId) { handler.apply(it, mapper.writeValueAsBytes(event)) }
+        assertThrows(LobbyFailure::class.java) { deliver() }
+        val created = service.resume(operation)
+        val room = UUID.fromString(created.body["data"]["lobbyId"].asText())
+        state = "LOBBY"
+        resource = room.toString()
+        version = 3
+        assertTrue(deliver())
+        assertEquals("WAITING", db.transaction { store.snapshot(it, room)["status"].asText() })
+        // A new lobby does not keep the abandoned previous code open.
+        resource = UUID.randomUUID().toString()
+        version = 4
+        event.put("aggregateVersion", 4)
+        val next = UUID.randomUUID()
+        assertTrue(inbox.process("lobby-menu-v1", next) { handler.apply(it, mapper.writeValueAsBytes(event)) })
+        val closed = db.transaction { store.snapshot(it, room) }
+        assertEquals("CLOSED", closed["status"].asText())
+        assertFalse(inbox.process("lobby-menu-v1", next) { error("Duplicate must not run") })
+        assertEquals(closed, db.transaction { store.snapshot(it, room) })
+    }
 }

@@ -111,10 +111,9 @@ Logout сохраняет operation и переводит session в CLOSING. О
 новый вход и ticket запрещены сразу. Worker повторяет идемпотентный вызов
 Game `/internal/v1/participation/logout` с тем же operationId. Только ответ
 APPLIED именно этой операции закрывает slot. Недоступность Game сохраняет
-CLOSING; отсутствие его реализации нельзя трактовать как MENU.
-Game реализует реестр участия, но LogoutParticipation и сдача ещё отсутствуют:
-сквозной logout проверяется в этапе 9.
-Auth-тест проверяет контракт успешного обычного выхода и retry через adapter.
+CLOSING. Game реализует LogoutParticipation: очистку MENU/очереди/лобби,
+отмену подготовки и сдачу в начавшейся партии. Повтор после потери ответа
+не меняет результат. Протокол, восстановление и сквозной тест — [logout.md](logout.md).
 
 Регистрация атомарно сохраняет AccountRegistered в outbox. Publisher ждёт
 JetStream ack. User читает durable consumer `user-profiles-v1`, применяет
