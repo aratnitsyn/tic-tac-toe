@@ -174,7 +174,8 @@ snapshot при каждой новой версии; это корректны�
 
 ```text
 services/{api-gateway,auth,user,lobby,matchmaking,game,realtime}/
-clients/{web,ios,android}/
+web/                               # React/TypeScript (корень по решению пользователя)
+clients/{ios,android}/
 contracts/{http,events}/
 infra/{local,kubernetes}/
 tests/{integration,e2e,load}/

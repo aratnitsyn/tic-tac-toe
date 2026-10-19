@@ -134,5 +134,19 @@ PostgreSQL и управляемым временем. Это не провер�
 См. [realtime.md](realtime.md): изолированные PostgreSQL/Redis/NATS проверки,
 два socket pods и dispatcher, fenced disconnect и очередь, bounded buffers,
 клиентские snapshot/ack/reconcile tests, runtime SIGKILL socket и restart Game.
-Протокол синхронизации реализован тестовым Go-клиентом; продуктовые клиенты —
-этапы 11–13. Локальный smoke проверяет внутренний WS, а не будущий внешний ingress.
+Протокол синхронизации реализован тестовым Go-клиентом и Web; мобильные клиенты —
+этапы 12–13. Локальный smoke проверяет внутренний WS, а не будущий внешний ingress.
+
+## Web
+
+Из `web/`: `npm ci`, `npm run contract`, `npm run lint`, `npm run build`. Эти
+проверки включены в `.github/workflows/web.yml`. Browser integration: после сборки
+шести сервисов и подготовки локального стенда — `npx playwright install chromium`,
+`JAVA_HOME="$(/usr/libexec/java_home -v 25)" npm test`. На Linux используйте JAVA_HOME
+установленного JDK 25. Команды, тестовый транспорт и ограничения —
+[инструкция Web](../../web/README.md). Тесты используют реальные Auth/Game/Lobby/
+Matchmaking/Gateway/Realtime, синтетическую browser network boundary без отключения
+TLS validation, собственные процессы и отдельные аккаунты. Проверки охватывают
+CSRF/cookie, password policy, повторный вход, два пути подбора и возвраты, поле,
+клавиатуру, сдачу/тайм-аут, stale snapshots, пропуск итогового event, паузу и
+foreground/reconnect с остатком хода. Это не приёмка Istio ingress или нагрузки.
