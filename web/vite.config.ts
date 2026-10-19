@@ -20,7 +20,7 @@ export default defineConfig(({ command }) => {
         return value;
     };
     const server = {
-        host: '127.0.0.1',
+        host: env('WEB_HOST'),
         port: Number(env('WEB_PORT')),
         strictPort: true,
         https: {

@@ -35,11 +35,11 @@ python3 scripts/run-service.py auth
 python3 scripts/run-service.py game
 python3 scripts/run-service.py lobby
 python3 scripts/run-service.py matchmaking
-WEB_ORIGIN=https://127.0.0.1:3000 python3 scripts/run-service.py api-gateway
-WEB_ORIGINS=https://127.0.0.1:3000 python3 scripts/run-service.py realtime
+python3 scripts/run-service.py api-gateway
+python3 scripts/run-service.py realtime
 ```
 
-Сначала из корня выпустите leaf certificate с SAN IP:127.0.0.1:
+Для loopback-режима из корня можно выпустить leaf certificate с SAN IP:127.0.0.1:
 
 ```sh
 python3 web/tool/init-tls.py
@@ -55,7 +55,18 @@ python3 web/tool/init-tls.py
 npm run dev
 ```
 
-Откройте `https://127.0.0.1:3000`. Настройки читаются из `web/local.env`,
+Текущий локальный стенд настроен для LAN-адреса MacBook: откройте
+`https://192.168.0.94:3000` на обоих устройствах. Vite слушает `WEB_HOST=192.168.0.94`;
+Gateway и Realtime разрешают тот же Origin. В `web/local.env` указан отдельный
+сертификат `web-lan.crt`/`web-lan.key` с SAN `192.168.0.94`, подписанный локальным CA.
+Он уже выпущен на этом MacBook и игнорируется Git; `init-tls.py` выпускает только
+loopback-сертификат и не заменяет LAN-сертификат. На каждом клиентском устройстве
+нужно явно установить доверие к публичному `infra/local/certs/ca.crt`; приватные
+ключи остаются на MacBook. В брандмауэре macOS разрешите входящие подключения Node.js.
+При смене LAN IP согласованно обновите `WEB_HOST`, оба Origin и SAN сертификата.
+Внутренние адреса Gateway/Realtime остаются `127.0.0.1`.
+
+Настройки читаются из `web/local.env`,
 окружение имеет приоритет. Vite — локальный TLS proxy к внутренним HTTP/WS
 сервисам; production build — статический `web/dist`, его API/WSS маршрутизацию
 и TLS обеспечивает будущий Istio ingress. `npm run preview` использует те же
