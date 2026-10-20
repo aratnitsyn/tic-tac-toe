@@ -1,0 +1,54 @@
+"apiVersion": "apps/v1"
+"kind": "StatefulSet"
+"metadata":
+  "name": "nats"
+  "namespace": "{{ .Values.dataNamespace }}"
+  "annotations":
+    "helm.sh/resource-policy": "keep"
+"spec":
+  "serviceName": "nats"
+  "replicas": 1
+  "selector":
+    "matchLabels":
+      "app": "nats"
+  "template":
+    "metadata":
+      "labels":
+        "app": "nats"
+      "annotations":
+        "sidecar.istio.io/inject": "false"
+    "spec":
+      "automountServiceAccountToken": false
+      "containers":
+        -
+          "name": "nats"
+          "image": "nats:2.11.4-alpine"
+          "ports":
+            -
+              "name": "tcp"
+              "containerPort": 4222
+          "envFrom":
+            -
+              "secretRef":
+                "name": "nats-credential"
+          "volumeMounts":
+            -
+              "name": "data"
+              "mountPath": "/data"
+          "command":
+            - "/bin/sh"
+            - "-ec"
+          "args":
+            - "exec nats-server -js -sd /data -m 8222 --user app --pass \"$NATS_PASSWORD\""
+      "volumes": []
+  "volumeClaimTemplates":
+    -
+      "metadata":
+        "name": "data"
+      "spec":
+        "accessModes":
+          - "ReadWriteOnce"
+        "storageClassName": "{{ .Values.storageClassName }}"
+        "resources":
+          "requests":
+            "storage": "2Gi"

@@ -11,8 +11,8 @@ import struct
 import subprocess
 import time
 import uuid
-from render import KUBE_ROOT, ROOT, SERVICE_PORT
-from deploy import KUBECTL, apply, kubectl
+from common import KUBE_ROOT, ROOT, SERVICE_PORT, values as profile
+from common import KUBECTL, apply, kubectl
 
 
 def require(condition, message):
@@ -25,12 +25,14 @@ def get_json(*args):
     return json.loads(result.stdout)
 
 
-def request(context, path, method='GET', body=None, token=None):
+def request(context, path, method='GET', body=None, token=None, command_id=None, trace_id=None):
     headers = {'X-Client-Type': 'NATIVE'}
+    if trace_id:
+        headers['traceparent'] = '00-' + trace_id + '-0123456789abcdef-01'
     if token:
         headers['Authorization'] = 'Bearer ' + token
     if method != 'GET':
-        headers.update({'Idempotency-Key': str(uuid.uuid4()), 'Content-Type': 'application/json'})
+        headers.update({'Idempotency-Key': command_id or str(uuid.uuid4()), 'Content-Type': 'application/json'})
     client = http.client.HTTPSConnection('tictactoe.test', 8443, context=context, timeout=8)
     client._create_connection = lambda address, timeout, source_address=None: socket.create_connection(('127.0.0.1', 8443), timeout)
     try:
@@ -147,7 +149,7 @@ def check_network(v):
     try:
         kubectl('-n', probe, 'wait', '--for=condition=Ready', 'pod/probe', '--timeout=180s')
         targets = []
-        for ns in (v['namespace'], v['dataNamespace']):
+        for ns in (v['namespace'], v['dataNamespace'], v['observation']['namespace']):
             services = get_json('-n', ns, 'get', 'service')['items']
             pods = get_json('-n', ns, 'get', 'pod')['items']
             for service in services:
@@ -159,13 +161,16 @@ def check_network(v):
                             targets.append([name + '/pod', pod['status']['podIP'], port['targetPort'], False])
         gateway = get_json('-n', v['ingressNamespace'], 'get', 'service', 'ingress')
         require([p['port'] for p in gateway['spec']['ports']] == [443], 'Ingress exposes a non-TLS port')
-        targets += [['external-https', gateway['spec']['clusterIP'], 443, True],
+        ingress_pods = get_json('-n', v['ingressNamespace'], 'get', 'pod')['items']
+        ingress_pod = next(p for p in ingress_pods if p['metadata'].get('labels', {}).get('app') == 'ingress')
+        targets += [['external-https/pod', ingress_pod['status']['podIP'], 8443, True],
+                    ['external-https', gateway['spec']['clusterIP'], 443, True],
                     ['external-http', gateway['spec']['clusterIP'], 80, False]]
         code = '''import json,socket,ssl,sys
 payload=json.load(sys.stdin)
 for name,host,port,expected in payload['targets']:
  try:
-  with socket.create_connection((host,port),timeout=1): actual=True
+  with socket.create_connection((host,port),timeout=5 if expected else 1): actual=True
  except OSError: actual=False
  if actual != expected: raise SystemExit('NetworkPolicy mismatch: '+name)
  print(name+': '+('allowed' if actual else 'blocked'))
@@ -202,7 +207,7 @@ print('TLS CA/SNI verification and cleartext rejection: passed')
 
 
 def main():
-    v = json.loads((KUBE_ROOT / 'values.json').read_text())
+    v = profile()
     context = ssl.create_default_context(cafile=str(ROOT / 'infra/local/certs/ca.crt'))
     log = (KUBE_ROOT / '.local/port-forward.log').open('w')
     process = subprocess.Popen(KUBECTL + ['-n', v['ingressNamespace'], 'port-forward',

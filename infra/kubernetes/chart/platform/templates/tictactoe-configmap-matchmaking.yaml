@@ -1,0 +1,7 @@
+"apiVersion": "v1"
+"kind": "ConfigMap"
+"metadata":
+  "name": "matchmaking"
+  "namespace": "{{ .Values.namespace }}"
+data:
+{{ toYaml (index .Values.config "matchmaking") | indent 2 }}

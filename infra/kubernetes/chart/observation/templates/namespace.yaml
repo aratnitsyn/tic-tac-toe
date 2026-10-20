@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.observation.namespace }}
+  labels:
+    istio-injection: disabled
+  annotations:
+    helm.sh/resource-policy: keep

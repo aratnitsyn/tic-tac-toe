@@ -1,0 +1,13 @@
+{{- range $name := list "api-gateway" "auth" "user" "lobby" "game" "matchmaking" "realtime" "realtime-dispatcher" }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  minAvailable: {{ $.Values.disruption.minAvailable }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+{{- end }}

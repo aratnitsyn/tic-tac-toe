@@ -1,0 +1,10 @@
+# Resource sizing must be measured; this is a replica policy, not proof of 100k capacity.
+workload:
+  jvm:
+    replicas: 3
+  go:
+    replicas: 3
+  ingress:
+    replicas: 2
+disruption:
+  minAvailable: 2

@@ -1,0 +1,7 @@
+"apiVersion": "v1"
+"kind": "ConfigMap"
+"metadata":
+  "name": "lobby"
+  "namespace": "{{ .Values.namespace }}"
+data:
+{{ toYaml (index .Values.config "lobby") | indent 2 }}

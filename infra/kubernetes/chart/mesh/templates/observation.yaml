@@ -1,0 +1,13 @@
+{{- range $name, $port := dict "jaeger" 4318 "prometheus" 9090 }}
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: plaintext-{{ $name }}
+  namespace: {{ $.Values.observation.namespace }}
+spec:
+  host: {{ $name }}.{{ $.Values.observation.namespace }}.svc.cluster.local
+  exportTo: ['*']
+  trafficPolicy:
+    tls: {mode: DISABLE}
+{{- end }}

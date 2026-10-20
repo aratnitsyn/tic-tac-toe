@@ -1,0 +1,25 @@
+"apiVersion": "networking.k8s.io/v1"
+"kind": "NetworkPolicy"
+"metadata":
+  "name": "store-auth-to-nats"
+  "namespace": "{{ .Values.namespace }}"
+"spec":
+  "podSelector":
+    "matchLabels":
+      "app": "auth"
+  "policyTypes":
+    - "Egress"
+  "egress":
+    -
+      "to":
+        -
+          "namespaceSelector":
+            "matchLabels":
+              "kubernetes.io/metadata.name": "{{ .Values.dataNamespace }}"
+          "podSelector":
+            "matchLabels":
+              "app": "nats"
+      "ports":
+        -
+          "protocol": "TCP"
+          "port": 4222

@@ -1,0 +1,50 @@
+global:
+  tlsDisable: false
+injector:
+  enabled: false
+server:
+  image:
+    repository: hashicorp/vault
+    tag: "2.0.4"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 256Mi
+  dataStorage:
+    enabled: true
+    size: 1Gi
+    storageClass: standard
+  auditStorage:
+    enabled: true
+    size: 1Gi
+    storageClass: standard
+  volumes:
+    - name: tls
+      secret:
+        secretName: vault-tls
+  volumeMounts:
+    - name: tls
+      mountPath: /vault/tls
+      readOnly: true
+  extraEnvironmentVars:
+    VAULT_CACERT: /vault/tls/ca.crt
+    VAULT_ADDR: https://vault.tictactoe-vault.svc.cluster.local:8200
+  standalone:
+    enabled: true
+    config: |
+      ui = false
+      disable_mlock = true
+      listener "tcp" {
+        address = "[::]:8200"
+        tls_cert_file = "/vault/tls/tls.crt"
+        tls_key_file = "/vault/tls/tls.key"
+      }
+      storage "file" {
+        path = "/vault/data"
+      }
+  ha:
+    enabled: false
+ui:
+  enabled: false

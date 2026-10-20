@@ -380,3 +380,10 @@ func read(conn *websocket.Conn, target *frame) error {
 	}
 	return nil
 }
+
+// Connections returns only a bounded aggregate, never user identities.
+func (s *Server) Connections() float64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return float64(len(s.clients))
+}

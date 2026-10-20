@@ -1,0 +1,120 @@
+"apiVersion": "apps/v1"
+"kind": "Deployment"
+"metadata":
+  "name": "realtime"
+  "namespace": "{{ .Values.namespace }}"
+"spec":
+  "replicas": {{ .Values.workload.go.replicas }}
+  "strategy":
+    "type": "RollingUpdate"
+    "rollingUpdate":
+      "maxSurge": 1
+      "maxUnavailable": 0
+  "selector":
+    "matchLabels":
+      "app": "realtime"
+  "template":
+    "metadata":
+      "labels":
+        "app": "realtime"
+        "sidecar.istio.io/inject": "true"
+      "annotations":
+        "proxy.istio.io/config": '{"terminationDrainDuration":"10s","holdApplicationUntilProxyStarts":true}'
+        "checksum/config": {{ toJson (index .Values.config "realtime") | sha256sum | quote }}
+    "spec":
+      "automountServiceAccountToken": true
+      "terminationGracePeriodSeconds": 45
+      "affinity":
+        "podAntiAffinity":
+          "preferredDuringSchedulingIgnoredDuringExecution":
+            - "weight": 100
+              "podAffinityTerm":
+                "labelSelector":
+                  "matchLabels":
+                    "app": "realtime"
+                "topologyKey": "kubernetes.io/hostname"
+      "containers":
+        -
+          "name": "realtime"
+          "image": "{{ .Values.imagePrefix }}/realtime:{{ .Values.imageTag }}"
+          "imagePullPolicy": "IfNotPresent"
+          "ports":
+            -
+              "name": "http"
+              "containerPort": 8086
+          "envFrom":
+            -
+              "configMapRef":
+                "name": "realtime"
+          "env":
+            -
+              "name": "PGPASSWORD"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "realtime-credential"
+                  "key": "password"
+            -
+              "name": "NATS_PASSWORD"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "nats-credential"
+                  "key": "password"
+            -
+              "name": "REDIS_PASSWORD"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "redis-credential"
+                  "key": "password"
+            -
+              "name": "AUTH_SERVICE_TOKEN"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "auth-service-credential"
+                  "key": "token"
+            -
+              "name": "GAME_SERVICE_TOKEN"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "game-service-credential"
+                  "key": "token"
+            -
+              "name": "MATCHMAKING_SERVICE_TOKEN"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "matchmaking-service-credential"
+                  "key": "token"
+            -
+              "name": "REALTIME_POD_ID"
+              "valueFrom":
+                "fieldRef":
+                  "fieldPath": "metadata.name"
+          "resources":
+{{ toYaml .Values.workload.go.resources | indent 12 }}
+          "startupProbe":
+            "httpGet":
+              "path": "/healthz"
+              "port": {{ index .Values.config "realtime" "PORT" | int }}
+            "periodSeconds": 2
+            "timeoutSeconds": 2
+            "failureThreshold": 150
+          "livenessProbe":
+            "httpGet":
+              "path": "/healthz"
+              "port": {{ index .Values.config "realtime" "PORT" | int }}
+            "periodSeconds": 10
+            "timeoutSeconds": 2
+            "failureThreshold": 3
+          "readinessProbe":
+            "httpGet":
+              "path": "/healthz"
+              "port": {{ index .Values.config "realtime" "PORT" | int }}
+            "periodSeconds": 3
+            "timeoutSeconds": 2
+            "failureThreshold": 2
+          "securityContext":
+            "allowPrivilegeEscalation": false
+            "runAsNonRoot": true
+            "runAsUser": 10001
+            "capabilities":
+              "drop":
+                - "ALL"

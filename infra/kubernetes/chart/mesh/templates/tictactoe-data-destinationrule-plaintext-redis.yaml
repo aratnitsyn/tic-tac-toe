@@ -1,0 +1,14 @@
+"apiVersion": "networking.istio.io/v1"
+"kind": "DestinationRule"
+"metadata":
+  "name": "plaintext-redis"
+  "namespace": "{{ .Values.dataNamespace }}"
+"spec":
+  "host": "redis.{{ .Values.dataNamespace }}.svc.cluster.local"
+  "exportTo":
+    - "*"
+  "trafficPolicy":
+    "connectionPool":
+{{ toYaml .Values.mesh.connectionPool | indent 6 }}
+    "tls":
+      "mode": "DISABLE"

@@ -1,0 +1,13 @@
+"apiVersion": "v1"
+"kind": "Service"
+"metadata":
+  "name": "realtime-dispatcher"
+  "namespace": "{{ .Values.namespace }}"
+"spec":
+  "selector":
+    "app": "realtime-dispatcher"
+  "ports":
+    -
+      "name": "http"
+      "port": 8086
+      "targetPort": 8086

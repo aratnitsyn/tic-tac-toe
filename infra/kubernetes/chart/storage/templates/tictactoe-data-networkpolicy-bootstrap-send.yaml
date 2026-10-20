@@ -1,0 +1,22 @@
+"apiVersion": "networking.k8s.io/v1"
+"kind": "NetworkPolicy"
+"metadata":
+  "name": "bootstrap-send"
+  "namespace": "{{ .Values.dataNamespace }}"
+"spec":
+  "podSelector":
+    "matchLabels":
+      "app": "bootstrap-stream"
+  "policyTypes":
+    - "Egress"
+  "egress":
+    -
+      "to":
+        -
+          "podSelector":
+            "matchLabels":
+              "app": "nats"
+      "ports":
+        -
+          "port": 4222
+          "protocol": "TCP"

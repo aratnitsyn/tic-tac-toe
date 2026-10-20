@@ -1,0 +1,61 @@
+"apiVersion": "apps/v1"
+"kind": "StatefulSet"
+"metadata":
+  "name": "postgres"
+  "namespace": "{{ .Values.dataNamespace }}"
+  "annotations":
+    "helm.sh/resource-policy": "keep"
+"spec":
+  "serviceName": "postgres"
+  "replicas": 1
+  "selector":
+    "matchLabels":
+      "app": "postgres"
+  "template":
+    "metadata":
+      "labels":
+        "app": "postgres"
+      "annotations":
+        "sidecar.istio.io/inject": "false"
+    "spec":
+      "automountServiceAccountToken": false
+      "containers":
+        -
+          "name": "postgres"
+          "image": "postgres:17.6-bookworm"
+          "ports":
+            -
+              "name": "tcp"
+              "containerPort": 5432
+          "envFrom":
+            -
+              "secretRef":
+                "name": "postgres-credential"
+          "volumeMounts":
+            -
+              "name": "data"
+              "mountPath": "/var/lib/postgresql/data"
+            -
+              "name": "init"
+              "mountPath": "/docker-entrypoint-initdb.d"
+              "readOnly": true
+          "env":
+            -
+              "name": "PGDATA"
+              "value": "/var/lib/postgresql/data/pgdata"
+      "volumes":
+        -
+          "name": "init"
+          "configMap":
+            "name": "postgres-init"
+  "volumeClaimTemplates":
+    -
+      "metadata":
+        "name": "data"
+      "spec":
+        "accessModes":
+          - "ReadWriteOnce"
+        "storageClassName": "{{ .Values.storageClassName }}"
+        "resources":
+          "requests":
+            "storage": "2Gi"

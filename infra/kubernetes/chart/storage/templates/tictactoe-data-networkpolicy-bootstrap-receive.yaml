@@ -1,0 +1,22 @@
+"apiVersion": "networking.k8s.io/v1"
+"kind": "NetworkPolicy"
+"metadata":
+  "name": "bootstrap-receive"
+  "namespace": "{{ .Values.dataNamespace }}"
+"spec":
+  "podSelector":
+    "matchLabels":
+      "app": "nats"
+  "policyTypes":
+    - "Ingress"
+  "ingress":
+    -
+      "from":
+        -
+          "podSelector":
+            "matchLabels":
+              "app": "bootstrap-stream"
+      "ports":
+        -
+          "port": 4222
+          "protocol": "TCP"

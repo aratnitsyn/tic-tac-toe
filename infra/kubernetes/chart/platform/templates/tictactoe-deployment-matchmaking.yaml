@@ -1,0 +1,103 @@
+"apiVersion": "apps/v1"
+"kind": "Deployment"
+"metadata":
+  "name": "matchmaking"
+  "namespace": "{{ .Values.namespace }}"
+"spec":
+  "replicas": {{ .Values.workload.go.replicas }}
+  "strategy":
+    "type": "RollingUpdate"
+    "rollingUpdate":
+      "maxSurge": 1
+      "maxUnavailable": 0
+  "selector":
+    "matchLabels":
+      "app": "matchmaking"
+  "template":
+    "metadata":
+      "labels":
+        "app": "matchmaking"
+        "sidecar.istio.io/inject": "true"
+      "annotations":
+        "proxy.istio.io/config": '{"terminationDrainDuration":"10s","holdApplicationUntilProxyStarts":true}'
+        "checksum/config": {{ toJson (index .Values.config "matchmaking") | sha256sum | quote }}
+    "spec":
+      "automountServiceAccountToken": true
+      "terminationGracePeriodSeconds": 45
+      "affinity":
+        "podAntiAffinity":
+          "preferredDuringSchedulingIgnoredDuringExecution":
+            - "weight": 100
+              "podAffinityTerm":
+                "labelSelector":
+                  "matchLabels":
+                    "app": "matchmaking"
+                "topologyKey": "kubernetes.io/hostname"
+      "containers":
+        -
+          "name": "matchmaking"
+          "image": "{{ .Values.imagePrefix }}/matchmaking:{{ .Values.imageTag }}"
+          "imagePullPolicy": "IfNotPresent"
+          "ports":
+            -
+              "name": "http"
+              "containerPort": 8085
+          "envFrom":
+            -
+              "configMapRef":
+                "name": "matchmaking"
+          "env":
+            -
+              "name": "PGPASSWORD"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "matchmaking-credential"
+                  "key": "password"
+            -
+              "name": "NATS_PASSWORD"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "nats-credential"
+                  "key": "password"
+            -
+              "name": "MATCHMAKING_SERVICE_TOKEN"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "matchmaking-service-credential"
+                  "key": "token"
+            -
+              "name": "GAME_SERVICE_TOKEN"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "game-service-credential"
+                  "key": "token"
+          "resources":
+{{ toYaml .Values.workload.go.resources | indent 12 }}
+          "startupProbe":
+            "httpGet":
+              "path": "/healthz"
+              "port": {{ index .Values.config "matchmaking" "PORT" | int }}
+            "periodSeconds": 2
+            "timeoutSeconds": 2
+            "failureThreshold": 150
+          "livenessProbe":
+            "httpGet":
+              "path": "/healthz"
+              "port": {{ index .Values.config "matchmaking" "PORT" | int }}
+            "periodSeconds": 10
+            "timeoutSeconds": 2
+            "failureThreshold": 3
+          "readinessProbe":
+            "httpGet":
+              "path": "/healthz"
+              "port": {{ index .Values.config "matchmaking" "PORT" | int }}
+            "periodSeconds": 3
+            "timeoutSeconds": 2
+            "failureThreshold": 2
+          "securityContext":
+            "allowPrivilegeEscalation": false
+            "runAsNonRoot": true
+            "runAsUser": 10001
+            "capabilities":
+              "drop":
+                - "ALL"

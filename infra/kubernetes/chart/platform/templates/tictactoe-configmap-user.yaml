@@ -1,0 +1,7 @@
+"apiVersion": "v1"
+"kind": "ConfigMap"
+"metadata":
+  "name": "user"
+  "namespace": "{{ .Values.namespace }}"
+data:
+{{ toYaml (index .Values.config "user") | indent 2 }}

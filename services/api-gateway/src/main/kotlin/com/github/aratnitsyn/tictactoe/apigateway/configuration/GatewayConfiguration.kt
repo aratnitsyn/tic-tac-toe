@@ -92,6 +92,7 @@ class GatewayConfiguration(
                 it
                     .pathMatchers(
                         "/actuator/health",
+                        "/actuator/prometheus",
                         "/actuator/health/**",
                         "/api/v1/auth/csrf",
                         "/api/v1/auth/register",

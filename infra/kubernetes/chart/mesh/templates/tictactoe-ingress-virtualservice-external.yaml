@@ -1,0 +1,35 @@
+"apiVersion": "networking.istio.io/v1"
+"kind": "VirtualService"
+"metadata":
+  "name": "external"
+  "namespace": "{{ .Values.ingressNamespace }}"
+"spec":
+  "hosts":
+{{ toYaml .Values.hosts | indent 4 }}
+  "gateways":
+    - "external"
+  "http":
+    -
+      "name": "api"
+      "match":
+        -
+          "uri":
+            "prefix": "/api/v1/"
+      "route":
+        -
+          "destination":
+            "host": "api-gateway.{{ .Values.namespace }}.svc.cluster.local"
+            "port":
+              "number": 8080
+    -
+      "name": "socket"
+      "match":
+        -
+          "uri":
+            "exact": "/wss"
+      "route":
+        -
+          "destination":
+            "host": "realtime.{{ .Values.namespace }}.svc.cluster.local"
+            "port":
+              "number": 8086

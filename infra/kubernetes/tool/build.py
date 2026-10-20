@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Build Linux service images and import them into Docker Desktop's kind node."""
 import argparse
-import json
 import os
 from pathlib import Path
 import platform
 import shutil
 import subprocess
 import tempfile
-from render import KUBE_ROOT, ROOT, JVM
+from agent import ensure_agent
+from common import KUBE_ROOT, ROOT, JVM, values as profile
 
 
 def run(command, **kwargs):
@@ -20,7 +20,7 @@ def main():
     parser.add_argument('--skip-compile', action='store_true', help='Reuse already built artifacts')
     parser.add_argument('--load', action='store_true', help='Import into the docker-desktop node')
     args = parser.parse_args()
-    values = json.loads((KUBE_ROOT / 'values.json').read_text())
+    values = profile()
     arch = 'arm64' if platform.machine() == 'arm64' else 'amd64'
     env = {**os.environ, 'CGO_ENABLED': '0', 'GOOS': 'linux', 'GOARCH': arch}
     go_service = ROOT / 'services/matchmaking'
@@ -42,6 +42,7 @@ def main():
                 if len(jars) != 1:
                     raise SystemExit('Expected exactly one bootJar for ' + service)
                 shutil.copyfile(jars[0], context / 'application.jar')
+                shutil.copyfile(ensure_agent(), context / 'opentelemetry-javaagent.jar')
                 dockerfile = KUBE_ROOT / 'Dockerfile.jvm'
             else:
                 shutil.copyfile(directory / ('build/linux-' + arch), context / 'service')

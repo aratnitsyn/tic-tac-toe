@@ -1,0 +1,120 @@
+"apiVersion": "apps/v1"
+"kind": "Deployment"
+"metadata":
+  "name": "auth"
+  "namespace": "{{ .Values.namespace }}"
+"spec":
+  "replicas": {{ .Values.workload.jvm.replicas }}
+  "strategy":
+    "type": "RollingUpdate"
+    "rollingUpdate":
+      "maxSurge": 1
+      "maxUnavailable": 0
+  "selector":
+    "matchLabels":
+      "app": "auth"
+  "template":
+    "metadata":
+      "labels":
+        "app": "auth"
+        "sidecar.istio.io/inject": "true"
+      "annotations":
+        "proxy.istio.io/config": '{"terminationDrainDuration":"10s","holdApplicationUntilProxyStarts":true}'
+        "checksum/config": {{ toJson (index .Values.config "auth") | sha256sum | quote }}
+    "spec":
+      "automountServiceAccountToken": true
+      "terminationGracePeriodSeconds": 45
+      "affinity":
+        "podAntiAffinity":
+          "preferredDuringSchedulingIgnoredDuringExecution":
+            - "weight": 100
+              "podAffinityTerm":
+                "labelSelector":
+                  "matchLabels":
+                    "app": "auth"
+                "topologyKey": "kubernetes.io/hostname"
+      "containers":
+        -
+          "name": "auth"
+          "image": "{{ .Values.imagePrefix }}/auth:{{ .Values.imageTag }}"
+          "imagePullPolicy": "IfNotPresent"
+          "ports":
+            -
+              "name": "http"
+              "containerPort": 8081
+          "envFrom":
+            -
+              "configMapRef":
+                "name": "auth"
+          "env":
+            -
+              "name": "PGPASSWORD"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "auth-credential"
+                  "key": "password"
+            -
+              "name": "NATS_PASSWORD"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "nats-credential"
+                  "key": "password"
+            -
+              "name": "REDIS_PASSWORD"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "redis-credential"
+                  "key": "password"
+            -
+              "name": "AUTH_SERVICE_TOKEN"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "auth-service-credential"
+                  "key": "token"
+            -
+              "name": "GAME_SERVICE_TOKEN"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "game-service-credential"
+                  "key": "token"
+          "resources":
+{{ toYaml .Values.workload.jvm.resources | indent 12 }}
+          "startupProbe":
+            "httpGet":
+              "path": "/actuator/health"
+              "port": {{ index .Values.config "auth" "PORT" | int }}
+            "periodSeconds": 2
+            "timeoutSeconds": 2
+            "failureThreshold": 150
+          "livenessProbe":
+            "httpGet":
+              "path": "/actuator/health/liveness"
+              "port": {{ index .Values.config "auth" "PORT" | int }}
+            "periodSeconds": 10
+            "timeoutSeconds": 2
+            "failureThreshold": 3
+          "readinessProbe":
+            "httpGet":
+              "path": "/actuator/health/readiness"
+              "port": {{ index .Values.config "auth" "PORT" | int }}
+            "periodSeconds": 3
+            "timeoutSeconds": 2
+            "failureThreshold": 2
+          "securityContext":
+            "allowPrivilegeEscalation": false
+            "runAsNonRoot": true
+            "runAsUser": 10001
+            "capabilities":
+              "drop":
+                - "ALL"
+          "volumeMounts":
+            -
+              "name": "login-key"
+              "mountPath": "/run/keys"
+              "readOnly": true
+      "volumes":
+        -
+          "name": "login-key"
+          "secret":
+            "secretName": "login-key"
+            "defaultMode": 292

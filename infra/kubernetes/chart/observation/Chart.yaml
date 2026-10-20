@@ -1,0 +1,4 @@
+apiVersion: v2
+name: observation
+version: 0.2.0
+type: application

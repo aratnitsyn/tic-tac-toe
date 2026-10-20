@@ -1,0 +1,67 @@
+"apiVersion": "networking.k8s.io/v1"
+"kind": "NetworkPolicy"
+"metadata":
+  "name": "receive-postgres"
+  "namespace": "{{ .Values.dataNamespace }}"
+"spec":
+  "podSelector":
+    "matchLabels":
+      "app": "postgres"
+  "policyTypes":
+    - "Ingress"
+  "ingress":
+    -
+      "from":
+        -
+          "namespaceSelector":
+            "matchLabels":
+              "kubernetes.io/metadata.name": "{{ .Values.namespace }}"
+          "podSelector":
+            "matchLabels":
+              "app": "auth"
+        -
+          "namespaceSelector":
+            "matchLabels":
+              "kubernetes.io/metadata.name": "{{ .Values.namespace }}"
+          "podSelector":
+            "matchLabels":
+              "app": "user"
+        -
+          "namespaceSelector":
+            "matchLabels":
+              "kubernetes.io/metadata.name": "{{ .Values.namespace }}"
+          "podSelector":
+            "matchLabels":
+              "app": "lobby"
+        -
+          "namespaceSelector":
+            "matchLabels":
+              "kubernetes.io/metadata.name": "{{ .Values.namespace }}"
+          "podSelector":
+            "matchLabels":
+              "app": "game"
+        -
+          "namespaceSelector":
+            "matchLabels":
+              "kubernetes.io/metadata.name": "{{ .Values.namespace }}"
+          "podSelector":
+            "matchLabels":
+              "app": "matchmaking"
+        -
+          "namespaceSelector":
+            "matchLabels":
+              "kubernetes.io/metadata.name": "{{ .Values.namespace }}"
+          "podSelector":
+            "matchLabels":
+              "app": "realtime"
+        -
+          "namespaceSelector":
+            "matchLabels":
+              "kubernetes.io/metadata.name": "{{ .Values.namespace }}"
+          "podSelector":
+            "matchLabels":
+              "app": "realtime-dispatcher"
+      "ports":
+        -
+          "protocol": "TCP"
+          "port": 5432

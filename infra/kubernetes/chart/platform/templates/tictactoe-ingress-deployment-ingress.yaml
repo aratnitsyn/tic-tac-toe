@@ -1,0 +1,46 @@
+"apiVersion": "apps/v1"
+"kind": "Deployment"
+"metadata":
+  "name": "ingress"
+  "namespace": "{{ .Values.ingressNamespace }}"
+"spec":
+  "replicas": {{ .Values.workload.ingress.replicas }}
+  "strategy":
+    "type": "RollingUpdate"
+    "rollingUpdate":
+      "maxSurge": 1
+      "maxUnavailable": 0
+  "selector":
+    "matchLabels":
+      "app": "ingress"
+  "template":
+    "metadata":
+      "labels":
+        "app": "ingress"
+        "istio": "{{ .Values.ingressNamespace }}"
+        "sidecar.istio.io/inject": "true"
+      "annotations":
+        "proxy.istio.io/config": '{"terminationDrainDuration":"10s","holdApplicationUntilProxyStarts":true}'
+        "inject.istio.io/templates": "gateway"
+    "spec":
+      "serviceAccountName": "ingress"
+      "terminationGracePeriodSeconds": 45
+      "affinity":
+        "podAntiAffinity":
+          "preferredDuringSchedulingIgnoredDuringExecution":
+            - "weight": 100
+              "podAffinityTerm":
+                "labelSelector":
+                  "matchLabels":
+                    "app": "ingress"
+                "topologyKey": "kubernetes.io/hostname"
+      "containers":
+        -
+          "name": "istio-proxy"
+          "image": "auto"
+          "resources":
+{{ toYaml .Values.workload.ingress.resources | indent 12 }}
+          "ports":
+            -
+              "containerPort": 8443
+              "name": "https"

@@ -1,0 +1,390 @@
+namespace: tictactoe
+ingressNamespace: tictactoe-ingress
+dataNamespace: tictactoe-data
+imagePrefix: tictactoe
+imageTag: local-14-3
+istioVersion: 1.31.2
+webOrigin: https://tictactoe.test:8443
+hosts:
+- tictactoe.test
+ingressServiceType: LoadBalancer
+storageClassName: standard
+config:
+  api-gateway:
+    PORT: '8080'
+    GAME_URL: http://game.tictactoe.svc.cluster.local:8084
+    AUTH_URL: http://auth.tictactoe.svc.cluster.local:8081
+    MATCHMAKING_URL: http://matchmaking.tictactoe.svc.cluster.local:8085
+    WEB_ORIGIN: https://tictactoe.test:8443
+    LOBBY_URL: http://lobby.tictactoe.svc.cluster.local:8083
+    JAVA_TOOL_OPTIONS: -Xms64m -Xmx256m -XX:ActiveProcessorCount=2 -javaagent:/otel/opentelemetry-javaagent.jar
+    OTEL_SERVICE_NAME: api-gateway
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.tictactoe-observation.svc.cluster.local:4318
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_METRICS_EXPORTER: none
+    OTEL_LOGS_EXPORTER: none
+    OTEL_TRACES_SAMPLER: parentbased_always_on
+    MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+    MANAGEMENT_METRICS_TAGS_SERVICE: api-gateway
+  auth:
+    PORT: '8081'
+    NATS_URL: nats://nats.tictactoe-data.svc.cluster.local:4222
+    NATS_USER: app
+    PG_JDBC_URL: jdbc:postgresql://postgres.tictactoe-data.svc.cluster.local:5432/auth
+    PGUSER: auth
+    REDIS_HOST: redis.tictactoe-data.svc.cluster.local
+    REDIS_PORT: '6379'
+    REDIS_ADDRESS: redis.tictactoe-data.svc.cluster.local:6379
+    GAME_URL: http://game.tictactoe.svc.cluster.local:8084
+    AUTH_LOGIN_KEY_ID: cluster-v1
+    AUTH_LOGIN_KEY_FILE: /run/keys/login-keys.properties
+    JAVA_TOOL_OPTIONS: -Xms64m -Xmx256m -XX:ActiveProcessorCount=2 -javaagent:/otel/opentelemetry-javaagent.jar
+    SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: '5'
+    SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: '1'
+    SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 20s
+    OTEL_SERVICE_NAME: auth
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.tictactoe-observation.svc.cluster.local:4318
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_METRICS_EXPORTER: none
+    OTEL_LOGS_EXPORTER: none
+    OTEL_TRACES_SAMPLER: parentbased_always_on
+    MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+    MANAGEMENT_METRICS_TAGS_SERVICE: auth
+    METRIC_REFRESH_MS: '5000'
+  user:
+    PORT: '8082'
+    NATS_URL: nats://nats.tictactoe-data.svc.cluster.local:4222
+    NATS_USER: app
+    PG_JDBC_URL: jdbc:postgresql://postgres.tictactoe-data.svc.cluster.local:5432/user
+    PGUSER: user
+    JAVA_TOOL_OPTIONS: -Xms64m -Xmx256m -XX:ActiveProcessorCount=2 -javaagent:/otel/opentelemetry-javaagent.jar
+    SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: '5'
+    SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: '1'
+    SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 20s
+    OTEL_SERVICE_NAME: user
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.tictactoe-observation.svc.cluster.local:4318
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_METRICS_EXPORTER: none
+    OTEL_LOGS_EXPORTER: none
+    OTEL_TRACES_SAMPLER: parentbased_always_on
+    MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+    MANAGEMENT_METRICS_TAGS_SERVICE: user
+    METRIC_REFRESH_MS: '5000'
+  lobby:
+    PORT: '8083'
+    NATS_URL: nats://nats.tictactoe-data.svc.cluster.local:4222
+    NATS_USER: app
+    PG_JDBC_URL: jdbc:postgresql://postgres.tictactoe-data.svc.cluster.local:5432/lobby
+    PGUSER: lobby
+    GAME_URL: http://game.tictactoe.svc.cluster.local:8084
+    LOBBY_RETRY_MS: '250'
+    LOBBY_CODE_USER_LIMIT: '10'
+    LOBBY_CODE_IP_LIMIT: '30'
+    JAVA_TOOL_OPTIONS: -Xms64m -Xmx256m -XX:ActiveProcessorCount=2 -javaagent:/otel/opentelemetry-javaagent.jar
+    SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: '5'
+    SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: '1'
+    SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 20s
+    OTEL_SERVICE_NAME: lobby
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.tictactoe-observation.svc.cluster.local:4318
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_METRICS_EXPORTER: none
+    OTEL_LOGS_EXPORTER: none
+    OTEL_TRACES_SAMPLER: parentbased_always_on
+    MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+    MANAGEMENT_METRICS_TAGS_SERVICE: lobby
+    METRIC_REFRESH_MS: '5000'
+  game:
+    PORT: '8084'
+    NATS_URL: nats://nats.tictactoe-data.svc.cluster.local:4222
+    NATS_USER: app
+    PG_JDBC_URL: jdbc:postgresql://postgres.tictactoe-data.svc.cluster.local:5432/game
+    PGUSER: game
+    COORDINATION_RETRY_DELAY_MS: '250'
+    JAVA_TOOL_OPTIONS: -Xms64m -Xmx256m -XX:ActiveProcessorCount=2 -javaagent:/otel/opentelemetry-javaagent.jar
+    SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: '5'
+    SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: '1'
+    SPRING_LIFECYCLE_TIMEOUT_PER_SHUTDOWN_PHASE: 20s
+    OTEL_SERVICE_NAME: game
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.tictactoe-observation.svc.cluster.local:4318
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_METRICS_EXPORTER: none
+    OTEL_LOGS_EXPORTER: none
+    OTEL_TRACES_SAMPLER: parentbased_always_on
+    MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+    MANAGEMENT_METRICS_TAGS_SERVICE: game
+    METRIC_REFRESH_MS: '5000'
+  matchmaking:
+    PORT: '8085'
+    NATS_URL: nats://nats.tictactoe-data.svc.cluster.local:4222
+    NATS_USER: app
+    PG_DSN: host=postgres.tictactoe-data.svc.cluster.local port=5432 user=matchmaking
+      dbname=matchmaking sslmode=disable pool_max_conns=5 pool_min_conns=1
+    GAME_URL: http://game.tictactoe.svc.cluster.local:8084
+    MATCHMAKING_RETRY_MS: '250'
+    OTEL_SERVICE_NAME: matchmaking
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.tictactoe-observation.svc.cluster.local:4318
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_METRICS_EXPORTER: none
+    OTEL_LOGS_EXPORTER: none
+    OTEL_TRACES_SAMPLER: parentbased_always_on
+  realtime:
+    PORT: '8086'
+    NATS_URL: nats://nats.tictactoe-data.svc.cluster.local:4222
+    NATS_USER: app
+    PG_DSN: host=postgres.tictactoe-data.svc.cluster.local port=5432 user=realtime
+      dbname=realtime sslmode=disable pool_max_conns=5 pool_min_conns=1
+    REDIS_HOST: redis.tictactoe-data.svc.cluster.local
+    REDIS_PORT: '6379'
+    REDIS_ADDRESS: redis.tictactoe-data.svc.cluster.local:6379
+    GAME_URL: http://game.tictactoe.svc.cluster.local:8084
+    AUTH_URL: http://auth.tictactoe.svc.cluster.local:8081
+    MATCHMAKING_URL: http://matchmaking.tictactoe.svc.cluster.local:8085
+    WEB_ORIGINS: https://tictactoe.test:8443
+    REALTIME_ROLE: socket
+    OTEL_SERVICE_NAME: realtime
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.tictactoe-observation.svc.cluster.local:4318
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_METRICS_EXPORTER: none
+    OTEL_LOGS_EXPORTER: none
+    OTEL_TRACES_SAMPLER: parentbased_always_on
+  realtime-dispatcher:
+    PORT: '8086'
+    NATS_URL: nats://nats.tictactoe-data.svc.cluster.local:4222
+    NATS_USER: app
+    PG_DSN: host=postgres.tictactoe-data.svc.cluster.local port=5432 user=realtime
+      dbname=realtime sslmode=disable pool_max_conns=5 pool_min_conns=1
+    REDIS_HOST: redis.tictactoe-data.svc.cluster.local
+    REDIS_PORT: '6379'
+    REDIS_ADDRESS: redis.tictactoe-data.svc.cluster.local:6379
+    GAME_URL: http://game.tictactoe.svc.cluster.local:8084
+    AUTH_URL: http://auth.tictactoe.svc.cluster.local:8081
+    MATCHMAKING_URL: http://matchmaking.tictactoe.svc.cluster.local:8085
+    WEB_ORIGINS: https://tictactoe.test:8443
+    REALTIME_ROLE: dispatcher
+    OTEL_SERVICE_NAME: realtime-dispatcher
+    OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger.tictactoe-observation.svc.cluster.local:4318
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_METRICS_EXPORTER: none
+    OTEL_LOGS_EXPORTER: none
+    OTEL_TRACES_SAMPLER: parentbased_always_on
+  postgres-init:
+    init-services.sh: "#!/usr/bin/env bash\nset -euo pipefail\n\nfor service in auth\
+      \ user lobby matchmaking game realtime; do\n    password_var=\"${service^^}_DB_PASSWORD\"\
+      \n    export SERVICE_DB_PASSWORD=\"${!password_var}\"\n    # Read the secret\
+      \ from the environment: never interpolate it into SQL text.\n    psql --username\
+      \ postgres --dbname postgres --set=ON_ERROR_STOP=1 --set=service=\"$service\"\
+      \ <<'SQL'\n\\getenv password SERVICE_DB_PASSWORD\nCREATE ROLE :\"service\" LOGIN\
+      \ PASSWORD :'password' NOSUPERUSER NOCREATEDB NOCREATEROLE;\nCREATE DATABASE\
+      \ :\"service\" OWNER :\"service\";\nREVOKE ALL ON DATABASE :\"service\" FROM\
+      \ PUBLIC;\nGRANT CONNECT ON DATABASE :\"service\" TO :\"service\";\nSQL\ndone\n\
+      unset SERVICE_DB_PASSWORD\n"
+  jetstream:
+    jetstream.json: "[\n  {\n    \"name\": \"DOMAIN_EVENTS\",\n    \"subjects\": [\"\
+      events.>\"],\n    \"retention\": \"limits\",\n    \"storage\": \"file\",\n \
+      \   \"discard\": \"new\",\n    \"max_msgs\": 1000000,\n    \"max_bytes\": 1073741824,\n\
+      \    \"max_age\": 86400000000000,\n    \"num_replicas\": 1,\n    \"duplicate_window\"\
+      : 120000000000\n  },\n  {\n    \"name\": \"PARKING\",\n    \"subjects\": [\"\
+      parking.>\"],\n    \"retention\": \"limits\",\n    \"storage\": \"file\",\n\
+      \    \"discard\": \"new\",\n    \"max_msgs\": 100000,\n    \"max_bytes\": 268435456,\n\
+      \    \"max_age\": 604800000000000,\n    \"num_replicas\": 1\n  }\n]\n"
+secret:
+- namespace: tictactoe
+  name: auth-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: auth
+- namespace: tictactoe
+  name: auth-service-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: api-gateway
+  - kind: Deployment
+    name: auth
+  - kind: Deployment
+    name: realtime-dispatcher
+  - kind: Deployment
+    name: realtime
+- namespace: tictactoe
+  name: game-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: game
+- namespace: tictactoe
+  name: game-service-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: api-gateway
+  - kind: Deployment
+    name: auth
+  - kind: Deployment
+    name: game
+  - kind: Deployment
+    name: lobby
+  - kind: Deployment
+    name: matchmaking
+  - kind: Deployment
+    name: realtime-dispatcher
+  - kind: Deployment
+    name: realtime
+- namespace: tictactoe
+  name: lobby-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: lobby
+- namespace: tictactoe
+  name: lobby-service-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: api-gateway
+  - kind: Deployment
+    name: lobby
+- namespace: tictactoe
+  name: login-key
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: auth
+- namespace: tictactoe
+  name: matchmaking-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: matchmaking
+- namespace: tictactoe
+  name: matchmaking-service-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: api-gateway
+  - kind: Deployment
+    name: matchmaking
+  - kind: Deployment
+    name: realtime-dispatcher
+  - kind: Deployment
+    name: realtime
+- namespace: tictactoe
+  name: nats-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: auth
+  - kind: Deployment
+    name: game
+  - kind: Deployment
+    name: lobby
+  - kind: Deployment
+    name: matchmaking
+  - kind: Deployment
+    name: realtime-dispatcher
+  - kind: Deployment
+    name: realtime
+  - kind: Deployment
+    name: user
+- namespace: tictactoe
+  name: realtime-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: realtime-dispatcher
+  - kind: Deployment
+    name: realtime
+- namespace: tictactoe
+  name: redis-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: auth
+  - kind: Deployment
+    name: realtime-dispatcher
+  - kind: Deployment
+    name: realtime
+- namespace: tictactoe
+  name: user-credential
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: user
+- namespace: tictactoe-ingress
+  name: ingress-tls
+  type: kubernetes.io/tls
+  restart: []
+- namespace: tictactoe-vault
+  name: vault-tls
+  type: Opaque
+  restart: []
+- namespace: tictactoe
+  name: vault-ca
+  type: Opaque
+  restart: []
+- namespace: tictactoe-data
+  name: vault-ca
+  type: Opaque
+  restart: []
+- namespace: tictactoe-ingress
+  name: vault-ca
+  type: Opaque
+  restart: []
+- namespace: tictactoe-vault
+  name: vault-ca
+  type: Opaque
+  restart: []
+- namespace: tictactoe-observation
+  name: grafana-admin
+  type: Opaque
+  restart:
+  - kind: Deployment
+    name: grafana
+- namespace: tictactoe-observation
+  name: vault-ca
+  type: Opaque
+  restart: []
+vault:
+  kubeApiCIDR: 172.19.0.4/32
+  kubeApiServiceCIDR: 10.96.0.1/32
+workload:
+  jvm:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 192Mi
+      limits:
+        memory: 512Mi
+  go:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 25m
+        memory: 32Mi
+      limits:
+        memory: 128Mi
+  ingress:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 25m
+        memory: 64Mi
+      limits:
+        memory: 192Mi
+disruption:
+  minAvailable: 0
+mesh:
+  connectionPool:
+    tcp:
+      maxConnections: 64
+      connectTimeout: 3s
+    http:
+      http1MaxPendingRequests: 64
+      http2MaxRequests: 128
+      maxRequestsPerConnection: 1000
+observation:
+  namespace: tictactoe-observation
+  prometheusImage: prom/prometheus:v3.2.1
+  jaegerImage: jaegertracing/jaeger:2.11.0
+  grafanaImage: grafana/grafana:12.2.0

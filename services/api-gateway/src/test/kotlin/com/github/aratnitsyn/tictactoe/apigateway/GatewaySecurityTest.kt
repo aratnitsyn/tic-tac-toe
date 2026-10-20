@@ -358,6 +358,7 @@ class GatewaySecurityTest {
         @JvmStatic
         @DynamicPropertySource
         fun properties(registry: DynamicPropertyRegistry) {
+            registry.add("management.endpoints.web.exposure.include") { "health,info,prometheus" }
             registry.add("gateway.auth-url") { "http://127.0.0.1:${server.address.port}" }
             registry.add("gateway.auth-service-token") { SERVICE_TOKEN }
             registry.add("gateway.web-origin") { ORIGIN }

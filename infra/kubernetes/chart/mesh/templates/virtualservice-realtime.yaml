@@ -1,0 +1,18 @@
+"apiVersion": "networking.istio.io/v1"
+"kind": "VirtualService"
+"metadata":
+  "name": "mesh-realtime"
+  "namespace": "{{ .Values.namespace }}"
+"spec":
+  "hosts":
+    - "realtime.{{ .Values.namespace }}.svc.cluster.local"
+  "gateways":
+    - "mesh"
+  "http":
+    -
+      "route":
+        -
+          "destination":
+            "host": "realtime.{{ .Values.namespace }}.svc.cluster.local"
+            "port":
+              "number": 8086

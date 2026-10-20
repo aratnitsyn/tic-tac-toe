@@ -1,0 +1,45 @@
+"apiVersion": "batch/v1"
+"kind": "Job"
+"metadata":
+  "name": "bootstrap-stream"
+  "namespace": "{{ .Values.dataNamespace }}"
+"spec":
+  "backoffLimit": 3
+  "template":
+    "metadata":
+      "labels":
+        "app": "bootstrap-stream"
+      "annotations":
+        "sidecar.istio.io/inject": "false"
+    "spec":
+      "restartPolicy": "Never"
+      "automountServiceAccountToken": false
+      "containers":
+        -
+          "name": "bootstrap"
+          "image": "{{ .Values.imagePrefix }}/matchmaking:{{ .Values.imageTag }}"
+          "command":
+            - "/bootstrap-streams"
+            - "-config"
+            - "/config/jetstream.json"
+          "env":
+            -
+              "name": "NATS_URL"
+              "value": "nats://nats:4222"
+            -
+              "name": "NATS_USER"
+              "value": "app"
+          "envFrom":
+            -
+              "secretRef":
+                "name": "nats-credential"
+          "volumeMounts":
+            -
+              "name": "config"
+              "mountPath": "/config"
+              "readOnly": true
+      "volumes":
+        -
+          "name": "config"
+          "configMap":
+            "name": "jetstream"

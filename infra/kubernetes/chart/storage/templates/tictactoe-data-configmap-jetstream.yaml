@@ -1,0 +1,7 @@
+"apiVersion": "v1"
+"kind": "ConfigMap"
+"metadata":
+  "name": "jetstream"
+  "namespace": "{{ .Values.dataNamespace }}"
+data:
+{{ toYaml (index .Values.config "jetstream") | indent 2 }}

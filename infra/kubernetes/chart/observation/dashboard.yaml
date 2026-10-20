@@ -1,0 +1,15 @@
+title: Tic Tac Toe platform
+uid: tictactoe-platform
+schemaVersion: 39
+version: 1
+refresh: 5s
+time: {from: now-30m, to: now}
+panels:
+  - {id: 1, type: timeseries, title: Backend availability, gridPos: {x: 0, y: 0, w: 12, h: 7}, datasource: {uid: prometheus}, targets: [{expr: up, legendFormat: '{{service}}'}]}
+  - {id: 2, type: timeseries, title: Auth active and closing sessions, gridPos: {x: 12, y: 0, w: 12, h: 7}, datasource: {uid: prometheus}, targets: [{expr: ttt_session_active}, {expr: ttt_session_closing}]}
+  - {id: 3, type: timeseries, title: FIFO queue, gridPos: {x: 0, y: 7, w: 12, h: 7}, datasource: {uid: prometheus}, targets: [{expr: ttt_queue_available}, {expr: ttt_queue_reserved}, {expr: ttt_queue_disconnected}]}
+  - {id: 4, type: timeseries, title: Game timers and pauses, gridPos: {x: 12, y: 7, w: 12, h: 7}, datasource: {uid: prometheus}, targets: [{expr: ttt_timer_due}, {expr: ttt_timer_lag_seconds}, {expr: ttt_game_paused}]}
+  - {id: 5, type: timeseries, title: WebSocket connections, gridPos: {x: 0, y: 14, w: 12, h: 7}, datasource: {uid: prometheus}, targets: [{expr: ttt_ws_connections, legendFormat: '{{instance}}'}]}
+  - {id: 6, type: timeseries, title: Outbox pending and lag, gridPos: {x: 12, y: 14, w: 12, h: 7}, datasource: {uid: prometheus}, targets: [{expr: ttt_outbox_pending, legendFormat: '{{service}} pending'}, {expr: ttt_outbox_lag_seconds, legendFormat: '{{service}} lag'}]}
+  - {id: 7, type: timeseries, title: Go HTTP errors, gridPos: {x: 0, y: 21, w: 12, h: 7}, datasource: {uid: prometheus}, targets: [{expr: 'sum by (service) (rate(ttt_http_requests_total{code=~"5.."}[5m]))'}]}
+  - {id: 8, type: timeseries, title: JVM HTTP errors, gridPos: {x: 12, y: 21, w: 12, h: 7}, datasource: {uid: prometheus}, targets: [{expr: 'sum by (service) (rate(http_server_requests_seconds_count{status=~"5.."}[5m]))'}]}

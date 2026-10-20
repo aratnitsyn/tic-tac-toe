@@ -1,0 +1,7 @@
+"apiVersion": "v1"
+"kind": "ConfigMap"
+"metadata":
+  "name": "postgres-init"
+  "namespace": "{{ .Values.dataNamespace }}"
+data:
+{{ toYaml (index .Values.config "postgres-init") | indent 2 }}

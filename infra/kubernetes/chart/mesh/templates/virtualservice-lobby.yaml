@@ -1,0 +1,18 @@
+"apiVersion": "networking.istio.io/v1"
+"kind": "VirtualService"
+"metadata":
+  "name": "mesh-lobby"
+  "namespace": "{{ .Values.namespace }}"
+"spec":
+  "hosts":
+    - "lobby.{{ .Values.namespace }}.svc.cluster.local"
+  "gateways":
+    - "mesh"
+  "http":
+    -
+      "route":
+        -
+          "destination":
+            "host": "lobby.{{ .Values.namespace }}.svc.cluster.local"
+            "port":
+              "number": 8083

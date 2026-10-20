@@ -1,0 +1,54 @@
+"apiVersion": "apps/v1"
+"kind": "StatefulSet"
+"metadata":
+  "name": "redis"
+  "namespace": "{{ .Values.dataNamespace }}"
+  "annotations":
+    "helm.sh/resource-policy": "keep"
+"spec":
+  "serviceName": "redis"
+  "replicas": 1
+  "selector":
+    "matchLabels":
+      "app": "redis"
+  "template":
+    "metadata":
+      "labels":
+        "app": "redis"
+      "annotations":
+        "sidecar.istio.io/inject": "false"
+    "spec":
+      "automountServiceAccountToken": false
+      "containers":
+        -
+          "name": "redis"
+          "image": "redis:8.0.3-alpine"
+          "ports":
+            -
+              "name": "tcp"
+              "containerPort": 6379
+          "envFrom":
+            -
+              "secretRef":
+                "name": "redis-credential"
+          "volumeMounts":
+            -
+              "name": "data"
+              "mountPath": "/data"
+          "command":
+            - "/bin/sh"
+            - "-ec"
+          "args":
+            - "exec redis-server --requirepass \"$REDIS_PASSWORD\" --appendonly yes"
+      "volumes": []
+  "volumeClaimTemplates":
+    -
+      "metadata":
+        "name": "data"
+      "spec":
+        "accessModes":
+          - "ReadWriteOnce"
+        "storageClassName": "{{ .Values.storageClassName }}"
+        "resources":
+          "requests":
+            "storage": "1Gi"

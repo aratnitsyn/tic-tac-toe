@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aratnitsyn/tictactoe/services/matchmaking/internal/telemetry"
 	"log/slog"
 	"net/http"
 	"os"
@@ -19,6 +20,11 @@ import (
 )
 
 func main() {
+	closeTrace, traceErr := telemetry.Setup("matchmaking")
+	if traceErr != nil {
+		panic("invalid telemetry configuration")
+	}
+	defer telemetry.Shutdown(closeTrace)
 	port := required("PORT")
 	pool, err := pgxpool.New(context.Background(), required("PG_DSN"))
 	if err != nil {
@@ -54,7 +60,7 @@ func main() {
 	}
 	server := &http.Server{
 		Addr:              ":" + port,
-		Handler:           service.Handler(token),
+		Handler:           telemetry.Handler("matchmaking", pool, nil, service.Handler(token)),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,

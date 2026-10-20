@@ -1,0 +1,103 @@
+"apiVersion": "apps/v1"
+"kind": "Deployment"
+"metadata":
+  "name": "lobby"
+  "namespace": "{{ .Values.namespace }}"
+"spec":
+  "replicas": {{ .Values.workload.jvm.replicas }}
+  "strategy":
+    "type": "RollingUpdate"
+    "rollingUpdate":
+      "maxSurge": 1
+      "maxUnavailable": 0
+  "selector":
+    "matchLabels":
+      "app": "lobby"
+  "template":
+    "metadata":
+      "labels":
+        "app": "lobby"
+        "sidecar.istio.io/inject": "true"
+      "annotations":
+        "proxy.istio.io/config": '{"terminationDrainDuration":"10s","holdApplicationUntilProxyStarts":true}'
+        "checksum/config": {{ toJson (index .Values.config "lobby") | sha256sum | quote }}
+    "spec":
+      "automountServiceAccountToken": true
+      "terminationGracePeriodSeconds": 45
+      "affinity":
+        "podAntiAffinity":
+          "preferredDuringSchedulingIgnoredDuringExecution":
+            - "weight": 100
+              "podAffinityTerm":
+                "labelSelector":
+                  "matchLabels":
+                    "app": "lobby"
+                "topologyKey": "kubernetes.io/hostname"
+      "containers":
+        -
+          "name": "lobby"
+          "image": "{{ .Values.imagePrefix }}/lobby:{{ .Values.imageTag }}"
+          "imagePullPolicy": "IfNotPresent"
+          "ports":
+            -
+              "name": "http"
+              "containerPort": 8083
+          "envFrom":
+            -
+              "configMapRef":
+                "name": "lobby"
+          "env":
+            -
+              "name": "PGPASSWORD"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "lobby-credential"
+                  "key": "password"
+            -
+              "name": "NATS_PASSWORD"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "nats-credential"
+                  "key": "password"
+            -
+              "name": "LOBBY_SERVICE_TOKEN"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "lobby-service-credential"
+                  "key": "token"
+            -
+              "name": "GAME_SERVICE_TOKEN"
+              "valueFrom":
+                "secretKeyRef":
+                  "name": "game-service-credential"
+                  "key": "token"
+          "resources":
+{{ toYaml .Values.workload.jvm.resources | indent 12 }}
+          "startupProbe":
+            "httpGet":
+              "path": "/actuator/health"
+              "port": {{ index .Values.config "lobby" "PORT" | int }}
+            "periodSeconds": 2
+            "timeoutSeconds": 2
+            "failureThreshold": 150
+          "livenessProbe":
+            "httpGet":
+              "path": "/actuator/health/liveness"
+              "port": {{ index .Values.config "lobby" "PORT" | int }}
+            "periodSeconds": 10
+            "timeoutSeconds": 2
+            "failureThreshold": 3
+          "readinessProbe":
+            "httpGet":
+              "path": "/actuator/health/readiness"
+              "port": {{ index .Values.config "lobby" "PORT" | int }}
+            "periodSeconds": 3
+            "timeoutSeconds": 2
+            "failureThreshold": 2
+          "securityContext":
+            "allowPrivilegeEscalation": false
+            "runAsNonRoot": true
+            "runAsUser": 10001
+            "capabilities":
+              "drop":
+                - "ALL"

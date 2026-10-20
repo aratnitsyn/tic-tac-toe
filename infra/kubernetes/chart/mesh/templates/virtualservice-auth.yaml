@@ -1,0 +1,18 @@
+"apiVersion": "networking.istio.io/v1"
+"kind": "VirtualService"
+"metadata":
+  "name": "mesh-auth"
+  "namespace": "{{ .Values.namespace }}"
+"spec":
+  "hosts":
+    - "auth.{{ .Values.namespace }}.svc.cluster.local"
+  "gateways":
+    - "mesh"
+  "http":
+    -
+      "route":
+        -
+          "destination":
+            "host": "auth.{{ .Values.namespace }}.svc.cluster.local"
+            "port":
+              "number": 8081

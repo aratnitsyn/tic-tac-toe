@@ -1,0 +1,13 @@
+"apiVersion": "v1"
+"kind": "Service"
+"metadata":
+  "name": "postgres"
+  "namespace": "{{ .Values.dataNamespace }}"
+"spec":
+  "selector":
+    "app": "postgres"
+  "ports":
+    -
+      "name": "tcp-postgres"
+      "port": 5432
+      "targetPort": 5432

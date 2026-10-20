@@ -1,0 +1,20 @@
+"apiVersion": "networking.istio.io/v1"
+"kind": "Gateway"
+"metadata":
+  "name": "external"
+  "namespace": "{{ .Values.ingressNamespace }}"
+"spec":
+  "selector":
+    "istio": "{{ .Values.ingressNamespace }}"
+  "servers":
+    -
+      "port":
+        "number": 443
+        "name": "https"
+        "protocol": "HTTPS"
+      "hosts":
+{{ toYaml .Values.hosts | indent 8 }}
+      "tls":
+        "mode": "SIMPLE"
+        "credentialName": "ingress-tls"
+        "minProtocolVersion": "TLSV1_2"

@@ -1,0 +1,129 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus
+  namespace: {{ .Values.observation.namespace }}
+data:
+  prometheus.yaml: |
+    global:
+      scrape_interval: 5s
+      scrape_timeout: 3s
+      evaluation_interval: 5s
+    rule_files: [/etc/config/rules.yaml]
+    scrape_configs:
+      {{- range $name, $port := dict "api-gateway" 8080 "auth" 8081 "user" 8082 "lobby" 8083 "game" 8084 "matchmaking" 8085 "realtime" 8086 "realtime-dispatcher" 8086 }}
+      - job_name: {{ $name }}
+        metrics_path: {{ if or (eq $name "matchmaking") (hasPrefix "realtime" $name) }}/metrics{{ else }}/actuator/prometheus{{ end }}
+        static_configs:
+          - targets: [{{ $name }}.{{ $.Values.namespace }}.svc.cluster.local:{{ $port }}]
+            labels:
+              service: {{ $name }}
+        metric_relabel_configs:
+          - action: labeldrop
+            regex: userId|user_id|account_id|session_id|token|http_url|http_target
+      {{- end }}
+  rules.yaml: |
+    groups:
+      - name: platform
+        rules:
+          - alert: BackendUnavailable
+            expr: up == 0
+            for: 10s
+            labels: {severity: warning}
+            annotations:
+              summary: Backend metrics endpoint unavailable
+              runbook: docs/runbooks/observation.md#backend-unavailable
+          - alert: DomainObserverUnavailable
+            expr: ttt_observer_up == 0
+            for: 15s
+            labels: {severity: warning}
+            annotations:
+              summary: Domain metrics cannot be refreshed
+              runbook: docs/runbooks/observation.md#domain-observer-unavailable
+          - alert: OutboxStalled
+            expr: ttt_outbox_pending > 0 and ttt_outbox_lag_seconds > 30
+            for: 15s
+            labels: {severity: warning}
+            annotations:
+              summary: Outbox publication stalled
+              runbook: docs/runbooks/observation.md#outbox-stalled
+          - alert: TimerWorkerStalled
+            expr: ttt_timer_due > 0 and ttt_timer_lag_seconds > 5
+            for: 10s
+            labels: {severity: warning}
+            annotations:
+              summary: Game deadline worker is behind server deadlines
+              runbook: docs/runbooks/observation.md#timer-worker-stalled
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jaeger
+  namespace: {{ .Values.observation.namespace }}
+data:
+  jaeger.yaml: |
+    extensions:
+      jaeger_storage:
+        backends:
+          memory:
+            memory:
+              max_traces: 5000
+      jaeger_query:
+        storage:
+          traces: memory
+    receivers:
+      otlp:
+        protocols:
+          http:
+            endpoint: 0.0.0.0:4318
+    processors:
+      batch: {}
+    exporters:
+      jaeger_storage_exporter:
+        trace_storage: memory
+    service:
+      extensions: [jaeger_storage, jaeger_query]
+      telemetry:
+        logs:
+          level: warn
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [jaeger_storage_exporter]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana
+  namespace: {{ .Values.observation.namespace }}
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        url: http://prometheus.{{ .Values.observation.namespace }}.svc.cluster.local:9090
+        access: proxy
+        isDefault: true
+      - name: Jaeger
+        uid: jaeger
+        type: jaeger
+        url: http://jaeger.{{ .Values.observation.namespace }}.svc.cluster.local:16686
+        access: proxy
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: platform
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dashboard
+  namespace: {{ .Values.observation.namespace }}
+data:
+  platform.json: {{ .Files.Get "dashboard.yaml" | fromYaml | toJson | quote }}

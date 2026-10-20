@@ -1,0 +1,5 @@
+helm: 3.19.0
+vaultChart: 0.34.1
+vaultImage: 2.0.4
+operatorChart: 1.6.0
+operatorImage: 1.6.0

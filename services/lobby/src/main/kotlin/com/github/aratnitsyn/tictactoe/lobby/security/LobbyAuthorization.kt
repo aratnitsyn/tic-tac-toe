@@ -25,7 +25,8 @@ class LobbyAuthorization(
     ): reactor.core.publisher.Mono<Void> {
         exchange.response.headers.cacheControl = "no-store"
         val health =
-            exchange.request.path.value() == "/actuator/health" ||
+            exchange.request.path.value() == "/actuator/prometheus" ||
+                exchange.request.path.value() == "/actuator/health" ||
                 exchange.request.path
                     .value()
                     .startsWith("/actuator/health/")

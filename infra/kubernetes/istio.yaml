@@ -1,24 +1,19 @@
-# Local single-node verification profile; capacity/HA policies belong to 14.2.
-apiVersion: install.istio.io/v1alpha1
-kind: IstioOperator
-spec:
-  profile: minimal
+# Shared Helm values for Istio base/istiod 1.31.2; data-plane resources are in chart/mesh.
+global:
   tag: 1.31.2
-  meshConfig:
-    defaultConfig:
-      holdApplicationUntilProxyStarts: true
-    accessLogFile: ""
-  values:
-    pilot:
-      resources:
-        requests:
-          cpu: 100m
-          memory: 256Mi
-    global:
-      proxy:
-        resources:
-          requests:
-            cpu: 10m
-            memory: 48Mi
-          limits:
-            memory: 192Mi
+  proxy:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 48Mi
+      limits:
+        memory: 192Mi
+meshConfig:
+  defaultConfig:
+    holdApplicationUntilProxyStarts: true
+    terminationDrainDuration: 10s
+pilot:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi

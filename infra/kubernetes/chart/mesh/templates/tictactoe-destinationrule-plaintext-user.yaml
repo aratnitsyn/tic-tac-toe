@@ -1,0 +1,14 @@
+"apiVersion": "networking.istio.io/v1"
+"kind": "DestinationRule"
+"metadata":
+  "name": "plaintext-user"
+  "namespace": "{{ .Values.namespace }}"
+"spec":
+  "host": "user.{{ .Values.namespace }}.svc.cluster.local"
+  "exportTo":
+    - "*"
+  "trafficPolicy":
+    "connectionPool":
+{{ toYaml .Values.mesh.connectionPool | indent 6 }}
+    "tls":
+      "mode": "DISABLE"

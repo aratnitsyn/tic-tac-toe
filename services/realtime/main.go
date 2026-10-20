@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/aratnitsyn/tictactoe/services/realtime/internal/socket"
+	"github.com/aratnitsyn/tictactoe/services/realtime/internal/telemetry"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
@@ -18,6 +19,11 @@ import (
 )
 
 func main() {
+	closeTrace, traceErr := telemetry.Setup("realtime")
+	if traceErr != nil {
+		panic("invalid telemetry configuration")
+	}
+	defer telemetry.Shutdown(closeTrace)
 	port := required("PORT")
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -75,7 +81,7 @@ func main() {
 	}
 	server := &http.Server{
 		Addr:              ":" + port,
-		Handler:           mux,
+		Handler:           telemetry.Handler("realtime", pool, realtime.Connections, mux),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       10 * time.Second,
 		WriteTimeout:      10 * time.Second,

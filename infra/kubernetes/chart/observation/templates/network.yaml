@@ -1,0 +1,132 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: {{ .Values.observation.namespace }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress: []
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dns
+  namespace: {{ .Values.observation.namespace }}
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prometheus-scrape
+  namespace: {{ .Values.observation.namespace }}
+spec:
+  podSelector:
+    matchLabels: {app: prometheus}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.namespace }}
+      ports:
+        {{- range $port := list 8080 8081 8082 8083 8084 8085 8086 }}
+        - {port: {{ $port }}, protocol: TCP}
+        {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: traces
+  namespace: {{ .Values.observation.namespace }}
+spec:
+  podSelector:
+    matchLabels: {app: jaeger}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.namespace }}
+      ports: [{port: 4318, protocol: TCP}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dashboard-egress
+  namespace: {{ .Values.observation.namespace }}
+spec:
+  podSelector:
+    matchLabels: {app: grafana}
+  policyTypes: [Egress]
+  egress:
+    - to: [{podSelector: {matchLabels: {app: prometheus}}}]
+      ports: [{port: 9090, protocol: TCP}]
+    - to: [{podSelector: {matchLabels: {app: jaeger}}}]
+      ports: [{port: 16686, protocol: TCP}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: prometheus-dashboard
+  namespace: {{ .Values.observation.namespace }}
+spec:
+  podSelector:
+    matchLabels: {app: prometheus}
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{podSelector: {matchLabels: {app: grafana}}}]
+      ports: [{port: 9090, protocol: TCP}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: jaeger-dashboard
+  namespace: {{ .Values.observation.namespace }}
+spec:
+  podSelector:
+    matchLabels: {app: jaeger}
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{podSelector: {matchLabels: {app: grafana}}}]
+      ports: [{port: 16686, protocol: TCP}]
+{{- range $name, $port := dict "api-gateway" 8080 "auth" 8081 "user" 8082 "lobby" 8083 "game" 8084 "matchmaking" 8085 "realtime" 8086 "realtime-dispatcher" 8086 }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: observe-{{ $name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  podSelector:
+    matchLabels: {app: {{ $name }}}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $.Values.observation.namespace }}
+          podSelector:
+            matchLabels: {app: prometheus}
+      ports: [{port: {{ $port }}, protocol: TCP}]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ $.Values.observation.namespace }}
+          podSelector:
+            matchLabels: {app: jaeger}
+      ports: [{port: 4318, protocol: TCP}]
+{{- end }}
