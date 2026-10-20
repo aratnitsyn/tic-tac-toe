@@ -14,6 +14,8 @@
 - Пауза при отключении во время игры; общий запас восстановления 30 секунд на каждого игрока за матч.
 - Единое поведение Web, iOS и Android, требования к доставке состояния, корректности и нагрузочной проверке.
 - HTTPS API по `/api/v1/**`, WebSocket по `wss://<host>/wss`; внешний TLS завершается на Istio ingress gateway, внутри mesh используется HTTP/WS и внутренний TCP без TLS/mTLS, исходящий TLS к внешним HTTPS-системам устанавливает egress gateway. Внешний cleartext fallback запрещён.
+- Инфраструктура и приложения устанавливаются и обновляются в подготовленном Kubernetes-кластере через Helm с закреплёнными версиями charts. Kubernetes и Istio описываются отдельно; manifests, templates и values — только YAML. Создание узлов и control plane не выполняется Helm.
+- Vault — единый источник секретов, ключей и сертификатов Kubernetes-окружения; Kubernetes получает их через интеграцию с Vault с разграничением доступа и ротацией. Несекретные параметры приложений передаются через ConfigMap. Межсервисные маршруты явно задаются ресурсами Istio VirtualService, DestinationRule и связанными manifests.
 - Вне первой версии: PvE, Bot/AI worker, рейтинг подбора, выбор времени хода, подтверждение email, восстановление пароля и внешние провайдеры входа. Обязательное подтверждение email и расширение способов входа предусмотрены для будущих версий.
 
 ## Capabilities
@@ -38,7 +40,7 @@
 
 ## Impact
 
-Предполагаемые сервисы: Auth, User, Lobby, Matchmaking, Game и Realtime. Заданный стек: Kotlin/Go, PostgreSQL, Redis, NATS JetStream, Istio service mesh с отдельными ingress/egress gateway, Spring Cloud API Gateway со Spring Security, Kubernetes; клиенты React/TypeScript, Swift и Kotlin. Распределение языков, владение данными, контракты и маршруты HTTP/WS определены в design.md; proposal фиксирует объём, а не детали реализации.
+Предполагаемые сервисы: Auth, User, Lobby, Matchmaking, Game и Realtime. Заданный стек: Kotlin/Go, PostgreSQL, Redis, NATS JetStream, Istio service mesh с отдельными ingress/egress gateway, Spring Cloud API Gateway со Spring Security, Kubernetes, Helm и Vault; клиенты React/TypeScript, Swift и Kotlin. Распределение языков, владение данными, контракты и маршруты HTTP/WS определены в design.md; proposal фиксирует объём, а не детали реализации.
 
 Технические решения по испытаниям, обнаружению отключения, email, кодам лобби и восстановлению операций зафиксированы в design.md. Подтверждённые продуктовые переходы перечислены ниже и внесены в спецификации. Численные SLO и ресурсный бюджет полной приёмки НФТ остаются не согласованы.
 

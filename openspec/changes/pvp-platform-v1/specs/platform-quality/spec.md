@@ -90,3 +90,51 @@ JVM backend сервисы SHALL собираться и запускаться 
 #### Scenario: Spring Boot patch upgrade
 - **WHEN** выходит новый стабильный patch Spring Boot 3.5.x
 - **THEN** после проверки совместимости обновляется точный номер во всех JVM backend сервисах; переход на 4.x автоматически не выполняется
+
+### Requirement: Helm deployment and separate YAML manifests
+Инфраструктура и приложения SHALL устанавливаться и обновляться в подготовленном Kubernetes-кластере через Helm с закреплёнными версиями charts и образов. Kubernetes и Istio SHALL описываться в отдельных charts/каталогах, а manifests, templates и values SHALL храниться только в YAML. Создание узлов и control plane является предварительным условием, а не обязанностью Helm.
+
+#### Scenario: Reproducible Helm installation
+- **WHEN** оператор устанавливает платформу в подготовленный кластер по инструкции
+- **THEN** helm lint и helm template проходят, отдельные Kubernetes/Istio YAML описания устанавливаются в порядке зависимостей и HTTPS/WSS smoke подтверждает принятые маршруты и границы TLS
+
+#### Scenario: Upgrade and rollback
+- **WHEN** проверяется обновление и совместимый rollback Helm-релиза
+- **THEN** конфигурация воспроизводима, durable данные сохраняются, а миграции БД не считаются автоматически отменёнными
+
+### Requirement: Vault secret and certificate source
+Vault SHALL быть единым источником инфраструктурных секретов, ключей и сертификатов Kubernetes-окружения. Интеграция SHALL использовать Kubernetes ServiceAccount и минимальные права по namespace/сервису. Kubernetes Secret SHALL быть только автоматически синхронизируемой копией из Vault для необходимого потребителя. Секреты SHALL отсутствовать в Git, Helm values, ConfigMap и логах; доменные password hashes и session state остаются в БД.
+
+#### Scenario: Isolated secret access
+- **WHEN** workload запрашивает секрет через интеграцию с Vault
+- **THEN** ServiceAccount получает только разрешённые материалы своего сервиса, а доступ к чужим секретам отклоняется
+
+#### Scenario: Secret and certificate rotation
+- **WHEN** credentials, ключ или сертификат обновлён в Vault
+- **THEN** потребитель получает обновление по документированной процедуре, использует действующие материалы, а старые ключи login-ответов сохраняются до окончания необходимого срока чтения
+
+#### Scenario: Vault unavailable at startup
+- **WHEN** Vault недоступен и обязательные материалы ещё не получены
+- **THEN** workload не становится ready и не использует локальные credential-файлы либо встроенные значения как fallback
+
+#### Scenario: Existing environment migration
+- **WHEN** существующий Kubernetes-стенд переводится на Vault
+- **THEN** доступ к действующим БД, данным и зашифрованным login-ответам сохраняется, а дальнейшая доставка секретов и TLS-материалов выполняется из Vault
+
+### Requirement: Application configuration through ConfigMap
+Все несекретные параметры приложений Kubernetes-окружения SHALL передаваться через ConfigMap посредством envFrom/configMapKeyRef либо конфигурационного mount. Секретные параметры SHALL поступать из Vault через предусмотренную интеграцию и не попадать в ConfigMap.
+
+#### Scenario: Configuration update
+- **WHEN** параметр приложения изменяется в YAML values и применяется Helm upgrade
+- **THEN** соответствующий ConfigMap обновляется, приложение получает значение через документированный rollout или reload и фактическая конфигурация проверяется
+
+### Requirement: Explicit Istio service routing
+HTTP/WS-маршрутизация между сервисами SHALL явно описываться через VirtualService, DestinationRule и необходимые связанные Istio ресурсы в отдельных YAML manifests. Для внешних границ SHALL использоваться Gateway и необходимые ServiceEntry. Маршруты SHALL сохранять /api/v1/**, точный /wss и внутренний HTTP/WS без TLS/mTLS; NetworkPolicy SHALL независимо ограничивать доступ.
+
+#### Scenario: Mesh route verification
+- **WHEN** сервис выполняет разрешённый межсервисный HTTP-вызов
+- **THEN** применяются объявленные mesh VirtualService/DestinationRule, Envoy config подтверждает назначение и отсутствие TLS для внутреннего игрового маршрута
+
+#### Scenario: Network isolation remains enforced
+- **WHEN** источник без разрешения NetworkPolicy пытается обратиться к внутреннему API или хранилищу
+- **THEN** соединение блокируется независимо от наличия Istio-маршрута
