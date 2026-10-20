@@ -1,0 +1,484 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "postgres-init",
+        "namespace": "tictactoe-data"
+      },
+      "data": {
+        "init-services.sh": "#!/usr/bin/env bash\nset -euo pipefail\n\nfor service in auth user lobby matchmaking game realtime; do\n    password_var=\"${service^^}_DB_PASSWORD\"\n    export SERVICE_DB_PASSWORD=\"${!password_var}\"\n    # Read the secret from the environment: never interpolate it into SQL text.\n    psql --username postgres --dbname postgres --set=ON_ERROR_STOP=1 --set=service=\"$service\" <<'SQL'\n\\getenv password SERVICE_DB_PASSWORD\nCREATE ROLE :\"service\" LOGIN PASSWORD :'password' NOSUPERUSER NOCREATEDB NOCREATEROLE;\nCREATE DATABASE :\"service\" OWNER :\"service\";\nREVOKE ALL ON DATABASE :\"service\" FROM PUBLIC;\nGRANT CONNECT ON DATABASE :\"service\" TO :\"service\";\nSQL\ndone\nunset SERVICE_DB_PASSWORD\n"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "jetstream",
+        "namespace": "tictactoe-data"
+      },
+      "data": {
+        "jetstream.json": "[\n  {\n    \"name\": \"DOMAIN_EVENTS\",\n    \"subjects\": [\"events.>\"],\n    \"retention\": \"limits\",\n    \"storage\": \"file\",\n    \"discard\": \"new\",\n    \"max_msgs\": 1000000,\n    \"max_bytes\": 1073741824,\n    \"max_age\": 86400000000000,\n    \"num_replicas\": 1,\n    \"duplicate_window\": 120000000000\n  },\n  {\n    \"name\": \"PARKING\",\n    \"subjects\": [\"parking.>\"],\n    \"retention\": \"limits\",\n    \"storage\": \"file\",\n    \"discard\": \"new\",\n    \"max_msgs\": 100000,\n    \"max_bytes\": 268435456,\n    \"max_age\": 604800000000000,\n    \"num_replicas\": 1\n  }\n]\n"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "postgres",
+        "namespace": "tictactoe-data"
+      },
+      "spec": {
+        "selector": {
+          "app": "postgres"
+        },
+        "ports": [
+          {
+            "name": "tcp-postgres",
+            "port": 5432,
+            "targetPort": 5432
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "StatefulSet",
+      "metadata": {
+        "name": "postgres",
+        "namespace": "tictactoe-data"
+      },
+      "spec": {
+        "serviceName": "postgres",
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app": "postgres"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "postgres"
+            },
+            "annotations": {
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "name": "postgres",
+                "image": "postgres:17.6-bookworm",
+                "ports": [
+                  {
+                    "name": "tcp",
+                    "containerPort": 5432
+                  }
+                ],
+                "envFrom": [
+                  {
+                    "secretRef": {
+                      "name": "postgres-credential"
+                    }
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "data",
+                    "mountPath": "/var/lib/postgresql/data"
+                  },
+                  {
+                    "name": "init",
+                    "mountPath": "/docker-entrypoint-initdb.d",
+                    "readOnly": true
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "PGDATA",
+                    "value": "/var/lib/postgresql/data/pgdata"
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "init",
+                "configMap": {
+                  "name": "postgres-init"
+                }
+              }
+            ]
+          }
+        },
+        "volumeClaimTemplates": [
+          {
+            "metadata": {
+              "name": "data"
+            },
+            "spec": {
+              "accessModes": [
+                "ReadWriteOnce"
+              ],
+              "storageClassName": "standard",
+              "resources": {
+                "requests": {
+                  "storage": "2Gi"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "redis",
+        "namespace": "tictactoe-data"
+      },
+      "spec": {
+        "selector": {
+          "app": "redis"
+        },
+        "ports": [
+          {
+            "name": "tcp-redis",
+            "port": 6379,
+            "targetPort": 6379
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "StatefulSet",
+      "metadata": {
+        "name": "redis",
+        "namespace": "tictactoe-data"
+      },
+      "spec": {
+        "serviceName": "redis",
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app": "redis"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "redis"
+            },
+            "annotations": {
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "name": "redis",
+                "image": "redis:8.0.3-alpine",
+                "ports": [
+                  {
+                    "name": "tcp",
+                    "containerPort": 6379
+                  }
+                ],
+                "envFrom": [
+                  {
+                    "secretRef": {
+                      "name": "redis-credential"
+                    }
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "data",
+                    "mountPath": "/data"
+                  }
+                ],
+                "command": [
+                  "/bin/sh",
+                  "-ec"
+                ],
+                "args": [
+                  "exec redis-server --requirepass \"$REDIS_PASSWORD\" --appendonly yes"
+                ]
+              }
+            ],
+            "volumes": []
+          }
+        },
+        "volumeClaimTemplates": [
+          {
+            "metadata": {
+              "name": "data"
+            },
+            "spec": {
+              "accessModes": [
+                "ReadWriteOnce"
+              ],
+              "storageClassName": "standard",
+              "resources": {
+                "requests": {
+                  "storage": "1Gi"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "nats",
+        "namespace": "tictactoe-data"
+      },
+      "spec": {
+        "selector": {
+          "app": "nats"
+        },
+        "ports": [
+          {
+            "name": "tcp-nats",
+            "port": 4222,
+            "targetPort": 4222
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "StatefulSet",
+      "metadata": {
+        "name": "nats",
+        "namespace": "tictactoe-data"
+      },
+      "spec": {
+        "serviceName": "nats",
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "app": "nats"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "nats"
+            },
+            "annotations": {
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "spec": {
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "name": "nats",
+                "image": "nats:2.11.4-alpine",
+                "ports": [
+                  {
+                    "name": "tcp",
+                    "containerPort": 4222
+                  }
+                ],
+                "envFrom": [
+                  {
+                    "secretRef": {
+                      "name": "nats-credential"
+                    }
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "data",
+                    "mountPath": "/data"
+                  }
+                ],
+                "command": [
+                  "/bin/sh",
+                  "-ec"
+                ],
+                "args": [
+                  "exec nats-server -js -sd /data -m 8222 --user app --pass \"$NATS_PASSWORD\""
+                ]
+              }
+            ],
+            "volumes": []
+          }
+        },
+        "volumeClaimTemplates": [
+          {
+            "metadata": {
+              "name": "data"
+            },
+            "spec": {
+              "accessModes": [
+                "ReadWriteOnce"
+              ],
+              "storageClassName": "standard",
+              "resources": {
+                "requests": {
+                  "storage": "2Gi"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "batch/v1",
+      "kind": "Job",
+      "metadata": {
+        "name": "bootstrap-stream",
+        "namespace": "tictactoe-data"
+      },
+      "spec": {
+        "backoffLimit": 3,
+        "template": {
+          "metadata": {
+            "labels": {
+              "app": "bootstrap-stream"
+            },
+            "annotations": {
+              "sidecar.istio.io/inject": "false"
+            }
+          },
+          "spec": {
+            "restartPolicy": "Never",
+            "automountServiceAccountToken": false,
+            "containers": [
+              {
+                "name": "bootstrap",
+                "image": "tictactoe/matchmaking:local-14-1",
+                "command": [
+                  "/bootstrap-streams",
+                  "-config",
+                  "/config/jetstream.json"
+                ],
+                "env": [
+                  {
+                    "name": "NATS_URL",
+                    "value": "nats://nats:4222"
+                  },
+                  {
+                    "name": "NATS_USER",
+                    "value": "app"
+                  }
+                ],
+                "envFrom": [
+                  {
+                    "secretRef": {
+                      "name": "nats-credential"
+                    }
+                  }
+                ],
+                "volumeMounts": [
+                  {
+                    "name": "config",
+                    "mountPath": "/config",
+                    "readOnly": true
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "config",
+                "configMap": {
+                  "name": "jetstream"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "bootstrap-send",
+        "namespace": "tictactoe-data"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "app": "bootstrap-stream"
+          }
+        },
+        "policyTypes": [
+          "Egress"
+        ],
+        "egress": [
+          {
+            "to": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app": "nats"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 4222,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "networking.k8s.io/v1",
+      "kind": "NetworkPolicy",
+      "metadata": {
+        "name": "bootstrap-receive",
+        "namespace": "tictactoe-data"
+      },
+      "spec": {
+        "podSelector": {
+          "matchLabels": {
+            "app": "nats"
+          }
+        },
+        "policyTypes": [
+          "Ingress"
+        ],
+        "ingress": [
+          {
+            "from": [
+              {
+                "podSelector": {
+                  "matchLabels": {
+                    "app": "bootstrap-stream"
+                  }
+                }
+              }
+            ],
+            "ports": [
+              {
+                "port": 4222,
+                "protocol": "TCP"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

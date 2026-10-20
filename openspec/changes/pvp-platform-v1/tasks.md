@@ -128,7 +128,7 @@
 
 ## 14. Kubernetes, Istio, наблюдаемость и восстановление
 
-- [ ] 14.1 Создать Kubernetes manifests/values с Istio sidecars, отдельным ingress Deployment/Service, Gateway/VirtualService, внешним HTTPS /api/v1/** и WSS /wss, внутренним HTTP/WS без TLS/mTLS (PeerAuthentication/DestinationRule DISABLE), закрытыми internal APIs; проверка: deploy, HTTPS/WSS smoke, отсутствие /realtime, запрет внешнего cleartext, проверка plaintext mesh в Envoy config/трассе и NetworkPolicy tests.
+- [x] 14.1 Создать Kubernetes manifests/values с Istio sidecars, отдельным ingress Deployment/Service, Gateway/VirtualService, внешним HTTPS /api/v1/** и WSS /wss, внутренним HTTP/WS без TLS/mTLS (PeerAuthentication/DestinationRule DISABLE), закрытыми internal APIs; проверка: deploy, HTTPS/WSS smoke, отсутствие /realtime, запрет внешнего cleartext, проверка plaintext mesh в Envoy config/трассе и NetworkPolicy tests.
 - [ ] 14.2 Настроить readiness/liveness, requests/limits, connection pools, drain и replica policies; проверка: rolling restart одного экземпляра не теряет подтверждённые ходы и не создаёт двойных матчей.
 - [ ] 14.3 Добавить metrics/tracing и dashboards для Auth, FIFO, таймеров, WS и outbox; проверка: синтетическая команда прослеживается между сервисами, userId отсутствует в metric labels.
 - [ ] 14.4 Добавить alert rules и runbooks очередей/лимитов/массовых отключений; проверка: fault injection вызывает ожидаемый alert и допускает восстановление по инструкции.

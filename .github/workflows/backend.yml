@@ -8,6 +8,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 -m unittest discover -s scripts/tests -v
+      - run: python3 infra/kubernetes/tool/render.py --check
+      - run: python3 infra/kubernetes/tool/storage.py --check
       - run: python3 tools/contracts/check-structure.py
       - run: bash -n scripts/check-go.sh scripts/check-local.sh scripts/install-go-tools.sh
   kotlin:

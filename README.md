@@ -42,7 +42,8 @@ scripts/check-go.sh
 Установщик проверяет SHA-256 golangci-lint 2.1.6 и помещает его в `.cache/bin/`.
 Backend CI: `.github/workflows/backend.yml`. Service README перечисляют порты.
 Health endpoints — внутренний HTTP; публичные HTTPS `/api/v1/**` и WSS `/wss`
-будут предоставлены Istio ingress при реализации инфраструктуры.
+предоставляются отдельным Istio ingress в локальном Kubernetes-профиле 14.1.
+Развёртывание и сетевые проверки — [infra/kubernetes/README.md](infra/kubernetes/README.md).
 
 ## Локальные хранилища
 

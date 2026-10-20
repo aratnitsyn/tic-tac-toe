@@ -1,0 +1,12 @@
+{
+  "namespace": "tictactoe",
+  "ingressNamespace": "tictactoe-ingress",
+  "dataNamespace": "tictactoe-data",
+  "imagePrefix": "tictactoe",
+  "imageTag": "local-14-1",
+  "istioVersion": "1.31.2",
+  "webOrigin": "https://tictactoe.test:8443",
+  "hosts": ["tictactoe.test"],
+  "ingressServiceType": "LoadBalancer",
+  "storageClassName": "standard"
+}
