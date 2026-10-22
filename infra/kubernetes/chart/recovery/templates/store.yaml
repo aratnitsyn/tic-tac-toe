@@ -1,0 +1,74 @@
+{{- if not (hasPrefix "tictactoe-recovery-" .Values.namespace) }}
+{{- fail "Recovery chart requires a dedicated tictactoe-recovery-* namespace" }}
+{{- end }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.namespace }}
+  labels: {istio-injection: disabled}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: {{ .Values.namespace }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress: []
+{{- range $name, $image := dict "postgres" "postgres:17.6-bookworm" "vault" "hashicorp/vault:2.0.4" "nats" "nats:2.11.4-alpine" "redis" "redis:8.0.3-alpine" }}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.namespace }}
+  labels: {app: {{ $name }}}
+  annotations: {sidecar.istio.io/inject: "false"}
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  {{- if eq $name "vault" }}
+  securityContext: {runAsUser: 1000, runAsGroup: 1000, fsGroup: 1000}
+  {{- end }}
+  containers:
+    - name: store
+      image: {{ $image }}
+      command: [/bin/sh, -ec]
+      args:
+        - |
+          {{- if eq $name "postgres" }}
+          exec docker-entrypoint.sh postgres -c listen_addresses=127.0.0.1
+          {{- else }}
+          while [ ! -f /work/start ]; do sleep 1; done
+          {{- if eq $name "vault" }}
+          mkdir -p /vault/audit
+          exec vault server -config=/work/server.hcl
+          {{- else if eq $name "nats" }}
+          exec nats-server -c /work/server.conf
+          {{- else }}
+          exec redis-server /work/server.conf
+          {{- end }}
+          {{- end }}
+      {{- if eq $name "postgres" }}
+      env:
+        - {name: POSTGRES_HOST_AUTH_METHOD, value: trust}
+        - {name: POSTGRES_USER, value: recovery_admin}
+        - {name: POSTGRES_DB, value: recovery_admin}
+        - {name: PGDATA, value: /work/pgdata}
+      {{- end }}
+      resources:
+        requests: {cpu: 25m, memory: 32Mi}
+        limits: {memory: 256Mi}
+      volumeMounts:
+        - {name: work, mountPath: /work}
+        {{- if eq $name "vault" }}
+        - {name: audit, mountPath: /vault/audit}
+        {{- end }}
+  volumes:
+    - {name: work, emptyDir: {}}
+    {{- if eq $name "vault" }}
+    - {name: audit, emptyDir: {}}
+    {{- end }}
+{{- end }}

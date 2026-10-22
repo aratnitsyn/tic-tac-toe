@@ -13,10 +13,12 @@ def main():
     for name in ('platform', 'storage', 'mesh', 'secret', 'observation'):
         helm('lint', str(KUBE_ROOT / 'chart' / name), '-f', str(KUBE_ROOT / 'values.yaml'), capture_output=True)
         result.extend(documents(name))
+    helm('lint', str(KUBE_ROOT / 'chart/recovery'), capture_output=True)
+    helm('lint', str(KUBE_ROOT / 'chart/egress-probe'), capture_output=True)
     if args.json:
         print(json.dumps(result))
     else:
-        print('Helm lint/template passed for platform, storage, mesh, secret and observation')
+        print('Helm lint/template passed for platform, storage, mesh, secret, observation; recovery and egress-probe lint passed')
 
 
 if __name__ == '__main__':

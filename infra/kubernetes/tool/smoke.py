@@ -106,7 +106,8 @@ def check_plaintext(v):
     app, ingress, data = (v[key] for key in ('namespace', 'ingressNamespace', 'dataNamespace'))
     istioctl = str(KUBE_ROOT / '.tools/istioctl')
     checked = []
-    for ns, names in [(app, list(SERVICE_PORT)), (ingress, ['ingress'])]:
+    egress = v['egress']['namespace']
+    for ns, names in [(app, list(SERVICE_PORT)), (ingress, ['ingress']), (egress, ['egress'])]:
         for name in names:
             pods = get_json('-n', ns, 'get', 'pod', '-l', 'app=' + name)['items']
             require(len(pods) == 1, 'Expected one local verification replica: ' + name)
@@ -117,7 +118,7 @@ def check_plaintext(v):
                 pod['metadata']['name'], '-n', ns, '-o', 'json'], check=True, capture_output=True, text=True)
             clusters = json.loads(result.stdout)
             relevant = [c for c in clusters if c.get('name', '').startswith('outbound|') and
-                        any('.' + target + '.svc.cluster.local' in c.get('name', '') for target in (app, data))]
+                        any('.' + target + '.svc.cluster.local' in c.get('name', '') for target in (app, data, egress))]
             require(relevant, 'No application clusters in Envoy: ' + name)
             for cluster in relevant:
                 require(not cluster.get('transportSocket'), 'Unexpected upstream TLS: ' + cluster['name'])
@@ -149,7 +150,7 @@ def check_network(v):
     try:
         kubectl('-n', probe, 'wait', '--for=condition=Ready', 'pod/probe', '--timeout=180s')
         targets = []
-        for ns in (v['namespace'], v['dataNamespace'], v['observation']['namespace']):
+        for ns in (v['namespace'], v['dataNamespace'], v['observation']['namespace'], v['egress']['namespace']):
             services = get_json('-n', ns, 'get', 'service')['items']
             pods = get_json('-n', ns, 'get', 'pod')['items']
             for service in services:

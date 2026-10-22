@@ -3,6 +3,9 @@
 "metadata":
   "name": "bootstrap-stream"
   "namespace": "{{ .Values.dataNamespace }}"
+  "annotations":
+    "helm.sh/hook": "post-install,post-upgrade"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
 "spec":
   "backoffLimit": 3
   "template":

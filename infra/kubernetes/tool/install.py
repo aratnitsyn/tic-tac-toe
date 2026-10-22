@@ -3,6 +3,7 @@
 import hashlib
 from pathlib import Path
 import io
+import json
 import platform
 import subprocess
 import sys
@@ -34,8 +35,17 @@ def main():
     subprocess.run([sys.executable, '-m', 'venv', str(folder / 'venv')], check=True)
     subprocess.run([str(folder/'venv/bin/python'), '-m', 'pip', 'install', '-r', str(KUBE_ROOT/'requirements.txt')], check=True)
     kube = ['kubectl', '--context', 'docker-desktop']
-    subprocess.run(kube+['apply','-f',str(KUBE_ROOT/'vendor/network-policy.yaml')],check=True)
-    subprocess.run(kube+['-n','kube-system','rollout','status','daemonset/kube-network-policies','--timeout=120s'],check=True)
+    kindnet = subprocess.run(kube+['-n','kube-system','get','daemonset/kindnet','-o','json'], capture_output=True, text=True)
+    if kindnet.returncode == 0:
+        image = json.loads(kindnet.stdout)['spec']['template']['spec']['containers'][0]['image']
+        if image != 'docker.io/kindest/kindnetd:v20260528-9350166c':
+            raise SystemExit('Unknown kindnet version: verify built-in NetworkPolicy before installing another engine')
+        extra = subprocess.run(kube+['-n','kube-system','get','daemonset/kube-network-policies'], capture_output=True)
+        if extra.returncode == 0:
+            raise SystemExit('Two NetworkPolicy engines detected; follow the approved kindnet recovery runbook first')
+        print('Using built-in kindnet NetworkPolicy; no second controller installed')
+    else:
+        raise SystemExit('Expected Docker Desktop kindnet is missing; verify the CNI before continuing')
     # Use the charts shipped with the exact release, independent of index lag.
     release_folder = folder / 'istio-1.31.2'
     if not release_folder.exists():

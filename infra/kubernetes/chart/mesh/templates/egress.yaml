@@ -1,0 +1,68 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata: {name: external-egress, namespace: {{ .Values.egress.namespace }}}
+spec:
+  selector: {istio: tictactoe-egress}
+  servers:
+    - port: {number: 80, name: http, protocol: HTTP}
+      hosts: [{{ .Values.egress.host }}]
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata: {name: plaintext, namespace: {{ .Values.egress.namespace }}}
+spec: {mtls: {mode: DISABLE}}
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata: {name: controlled-external, namespace: {{ .Values.egress.namespace }}}
+spec:
+  hosts: [{{ .Values.egress.host }}]
+  addresses: [240.240.0.10]
+  exportTo: ["*"]
+  location: MESH_EXTERNAL
+  resolution: STATIC
+  ports:
+    - {number: 80, name: http, protocol: HTTP}
+    - {number: 443, name: https, protocol: HTTPS}
+  endpoints:
+    - address: {{ .Values.egress.endpointIP }}
+      ports: {https: {{ .Values.egress.endpointPort }}}
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata: {name: controlled-external, namespace: {{ .Values.egress.namespace }}}
+spec:
+  hosts: [{{ .Values.egress.host }}]
+  gateways: [mesh, external-egress]
+  exportTo: ["*"]
+  http:
+    - match: [{gateways: [mesh], port: 80}]
+      route:
+        - destination: {host: 'egress.{{ .Values.egress.namespace }}.svc.cluster.local', port: {number: 80}}
+    - match: [{gateways: [external-egress], port: 80}]
+      route:
+        - destination: {host: {{ .Values.egress.host }}, port: {number: 443}}
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata: {name: plaintext-egress, namespace: {{ .Values.egress.namespace }}}
+spec:
+  host: egress.{{ .Values.egress.namespace }}.svc.cluster.local
+  exportTo: ["*"]
+  trafficPolicy: {tls: {mode: DISABLE}}
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata: {name: external-tls, namespace: {{ .Values.egress.namespace }}}
+spec:
+  host: {{ .Values.egress.host }}
+  exportTo: ["."]
+  workloadSelector: {matchLabels: {app: egress}}
+  trafficPolicy:
+    portLevelSettings:
+      - port: {number: 443}
+        tls:
+          mode: SIMPLE
+          credentialName: egress-ca
+          sni: {{ .Values.egress.host }}
+          subjectAltNames: [{{ .Values.egress.host }}]

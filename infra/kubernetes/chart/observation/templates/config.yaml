@@ -54,6 +54,41 @@ data:
             annotations:
               summary: Game deadline worker is behind server deadlines
               runbook: docs/runbooks/observation.md#timer-worker-stalled
+          - alert: QueueAvailabilityLost
+            expr: ttt_queue_disconnected > 0 and ttt_queue_disconnected / clamp_min(ttt_queue_disconnected + ttt_queue_available, 1) > 0.5
+            for: 30s
+            labels: {severity: warning}
+            annotations:
+              summary: More than half of waiting FIFO tickets are disconnected
+              runbook: docs/runbooks/observation.md#queue-availability-lost
+          - alert: CommandRateLimited
+            expr: sum by (job) (increase(http_server_requests_seconds_count{status="429"}[2m])) > 10 or sum by (job) (increase(ttt_http_requests_total{code="429"}[2m])) > 10
+            for: 15s
+            labels: {severity: warning}
+            annotations:
+              summary: Repeated command rate limiting
+              runbook: docs/runbooks/observation.md#command-rate-limited
+          - alert: SessionErrorBurst
+            expr: sum by (job) (increase(http_server_requests_seconds_count{job="auth",status=~"5.."}[2m])) > 5
+            for: 15s
+            labels: {severity: warning}
+            annotations:
+              summary: Auth server errors increased
+              runbook: docs/runbooks/observation.md#session-error-burst
+          - alert: DatabasePoolSaturated
+            expr: hikaricp_connections_active / clamp_min(hikaricp_connections_max, 1) >= 0.9
+            for: 30s
+            labels: {severity: warning}
+            annotations:
+              summary: JVM database pool nearly full
+              runbook: docs/runbooks/observation.md#database-pool-saturated
+          - alert: MassGameDisconnection
+            expr: ttt_game_paused >= 5 and ttt_game_paused / clamp_min(ttt_game_active, 1) > 0.5
+            for: 15s
+            labels: {severity: warning}
+            annotations:
+              summary: Most active games are paused waiting for connection recovery
+              runbook: docs/runbooks/observation.md#mass-game-disconnection
 ---
 apiVersion: v1
 kind: ConfigMap

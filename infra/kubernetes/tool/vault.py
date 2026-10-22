@@ -186,7 +186,7 @@ def main():
         if args.initialize_new:
             helm('upgrade','--install','observation',str(KUBE_ROOT/'chart/observation'),'-n',values()['observation']['namespace'],'-f',str(KUBE_ROOT/'values.yaml'),'--take-ownership')
         bootstrap_tls()
-        helm('upgrade','--install','vault','hashicorp/vault','--version','0.34.1','-n',NAMESPACE,'-f',str(KUBE_ROOT/'vault/server-values.yaml'))
+        helm('upgrade','--install','vault','hashicorp/vault','--version','0.34.1','-n',NAMESPACE,'-f',str(KUBE_ROOT/'vault/server-values.yaml'),'--post-renderer',str(KUBE_ROOT/'vault/post-render.sh'))
         kubectl('-n',NAMESPACE,'wait','--for=jsonpath={.status.phase}=Running','pod/vault-0','--timeout=180s')
     with connection() as api:
         initialized=api('sys/init')['initialized']; recovery=keychain_get()

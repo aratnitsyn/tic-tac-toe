@@ -1,0 +1,4 @@
+apiVersion: v2
+name: recovery
+version: 0.1.0
+description: Isolated temporary restore verification; no production volumes or Services

@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.egress.namespace }}
+  labels: {istio-injection: enabled}
+  annotations: {helm.sh/resource-policy: keep}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: {name: egress, namespace: {{ .Values.egress.namespace }}}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: {name: egress-secret-reader, namespace: {{ .Values.egress.namespace }}}
+rules:
+  - apiGroups: [""]
+    resources: [secrets]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: {name: egress-secret-reader, namespace: {{ .Values.egress.namespace }}}
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: egress-secret-reader}
+subjects:
+  - {kind: ServiceAccount, name: egress, namespace: {{ .Values.egress.namespace }}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: egress, namespace: {{ .Values.egress.namespace }}}
+spec:
+  replicas: 1
+  strategy: {type: RollingUpdate, rollingUpdate: {maxSurge: 1, maxUnavailable: 0}}
+  selector: {matchLabels: {app: egress}}
+  template:
+    metadata:
+      labels: {app: egress, istio: tictactoe-egress, sidecar.istio.io/inject: "true"}
+      annotations:
+        inject.istio.io/templates: gateway
+        proxy.istio.io/config: '{"terminationDrainDuration":"10s","holdApplicationUntilProxyStarts":true,"proxyStatsMatcher":{"inclusionRegexps":[".*ssl.*"]}}'
+    spec:
+      serviceAccountName: egress
+      terminationGracePeriodSeconds: 45
+      containers:
+        - name: istio-proxy
+          image: auto
+          resources:
+            requests: {cpu: 25m, memory: 64Mi}
+            limits: {memory: 192Mi}
+          ports: [{name: http, containerPort: 8080}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: egress, namespace: {{ .Values.egress.namespace }}}
+spec:
+  selector: {app: egress}
+  ports: [{name: http, port: 80, targetPort: 8080}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: default-deny, namespace: {{ .Values.egress.namespace }}}
+spec: {podSelector: {}, policyTypes: [Ingress, Egress], ingress: [], egress: []}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: control-plane, namespace: {{ .Values.egress.namespace }}}
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: istio-system}}
+          podSelector: {matchLabels: {app: istiod}}
+      ports: [{port: 15012, protocol: TCP}]
+    - to:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: kube-system}}
+          podSelector: {matchLabels: {k8s-app: kube-dns}}
+      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: from-mesh, namespace: {{ .Values.egress.namespace }}}
+spec:
+  podSelector: {matchLabels: {app: egress}}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: {{ .Values.namespace }}}}
+      ports: [{port: 8080, protocol: TCP}]
+  egress:
+    - to: [{ipBlock: {cidr: '{{ .Values.egress.endpointIP }}/32'}}]
+      ports: [{port: 18443, protocol: TCP}, {port: 18444, protocol: TCP}]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: {name: to-egress, namespace: {{ .Values.namespace }}}
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: {matchLabels: {kubernetes.io/metadata.name: {{ .Values.egress.namespace }}}}
+          podSelector: {matchLabels: {app: egress}}
+      ports: [{port: 8080, protocol: TCP}]

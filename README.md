@@ -103,4 +103,6 @@ React/TypeScript в [web/](web/README.md): cookie/CSRF, Lobby/FIFO, готовн
 управление клавиатурой и browser tests описаны в инструкции клиента.
 Из `web/`: `npm ci`, `npm run lint`, `npm run build`.
 
-Инфраструктура Kubernetes переводится на отдельные YAML Helm charts Kubernetes/Istio и Vault/VSO. Команды, миграция credentials, ConfigMap и recovery через macOS Keychain: [infra/kubernetes/README.md](infra/kubernetes/README.md). Статус задач — в OpenSpec tasks.md.
+Инфраструктура Kubernetes использует отдельные YAML Helm charts Kubernetes/Istio и Vault/VSO. Команды, миграция credentials, ConfigMap и recovery через macOS Keychain: [infra/kubernetes/README.md](infra/kubernetes/README.md). Статус задач — в OpenSpec tasks.md.
+
+Наблюдаемость, алерты, изолированный backup/restore и egress проверены на локальном стенде: [отчёт этапа 14](docs/verification/kubernetes-observation.md). Это не подтверждение нагрузки 100k или многонодовой HA.

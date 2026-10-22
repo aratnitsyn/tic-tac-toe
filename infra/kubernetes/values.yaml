@@ -344,6 +344,14 @@ secret:
   name: vault-ca
   type: Opaque
   restart: []
+- namespace: tictactoe-egress
+  name: egress-ca
+  type: Opaque
+  restart: []
+- namespace: tictactoe-egress
+  name: vault-ca
+  type: Opaque
+  restart: []
 vault:
   kubeApiCIDR: 172.19.0.4/32
   kubeApiServiceCIDR: 10.96.0.1/32
@@ -388,3 +396,9 @@ observation:
   prometheusImage: prom/prometheus:v3.2.1
   jaegerImage: jaegertracing/jaeger:2.11.0
   grafanaImage: grafana/grafana:12.2.0
+
+egress:
+  namespace: tictactoe-egress
+  host: egress-test.tictactoe.test
+  endpointIP: 192.168.65.254
+  endpointPort: 18443

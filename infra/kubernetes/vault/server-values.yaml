@@ -30,7 +30,7 @@ server:
       readOnly: true
   extraEnvironmentVars:
     VAULT_CACERT: /vault/tls/ca.crt
-    VAULT_ADDR: https://vault.tictactoe-vault.svc.cluster.local:8200
+    VAULT_ADDR: https://127.0.0.1:8200
   standalone:
     enabled: true
     config: |
